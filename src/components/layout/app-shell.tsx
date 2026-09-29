@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Navbar } from "./navbar";
 import { Sidebar } from "./sidebar";
+import { Footer } from "./footer";
 import { HistoryProvider } from "@/components/history/history-context";
 import { HistoryPopup } from "@/components/history/history-popup";
 
@@ -30,6 +31,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex min-w-0 flex-1 flex-col">
           <Navbar onMenuClick={() => setOpen(true)} />
           <main className="min-w-0 flex-1">{children}</main>
+          <Footer />
         </div>
 
         {open && (

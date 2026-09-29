@@ -39,7 +39,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </span>
           <span>
             <strong className="block text-sm font-extrabold tracking-[-.03em]">
-              minutehand
+            Date &amp; Time
             </strong>
             <small className="font-mono text-[9px] uppercase tracking-[.18em] text-muted-foreground">
               date &amp; time toolkit

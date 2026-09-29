@@ -112,6 +112,8 @@
 /* ------------------------------------------------------------------ */
 /*  Full-page background illustration                                  */
 /*  Fixed pseudo-element → always viewport-sized, zoom-proof.          */
+/*  Mobile  → mobile-responsive.png                                    */
+/*  Desktop → background.png                                           */
 /* ------------------------------------------------------------------ */
 
 /* Image layer (behind everything) */
@@ -121,7 +123,7 @@
   inset: 0;
   z-index: -2;
   pointer-events: none;
-  background-image: url("/mobile-background.png");
+  background-image: url("/mobile-responsive.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -134,7 +136,7 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: hsl(var(--background) / .75);
+  background: hsl(var(--background) / .55);
   backdrop-filter: blur(2px);
 }
 
@@ -207,4 +209,55 @@
     animation-duration: .01ms !important;
     transition-duration: .01ms !important;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Dark mode scrollbar — subtle, theme-matched                        */
+/* ------------------------------------------------------------------ */
+
+.dark {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--primary) / .55) transparent;
+}
+
+.dark * {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--primary) / .55) transparent;
+}
+
+/* WebKit (Chrome, Edge, Safari) */
+.dark ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: hsl(var(--background) / .35);
+  border-radius: 999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / .45);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background-color .2s ease;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / .70);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+.dark ::-webkit-scrollbar-thumb:active {
+  background: hsl(var(--primary) / .85);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+/* Corner (where horizontal + vertical meet) */
+.dark ::-webkit-scrollbar-corner {
+  background: transparent;
 }

@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const tool = getToolBySlug(slug);
   if (!tool) return { title: "Tool not found" };
-  return { title: `${tool.name} | Date & Time Toolkit`, description: tool.description };
+  return { title: `${tool.name} | Date & Time`, description: tool.description };
 
 }//dynamically creates the HTML metadata for each calculator page.Next.js puts it into the page's HTML <head>.
 
