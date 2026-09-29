@@ -15,7 +15,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
 
   return (
     <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-border bg-background/85 px-3 backdrop-blur-xl sm:gap-3 sm:px-5">
-      {/* Hamburger — mobile only */}
+      {/* Hamburger — mobile / tablet only */}
       <button
         type="button"
         onClick={onMenuClick}
@@ -25,14 +25,11 @@ export function Navbar({ onMenuClick }: NavbarProps) {
         <Menu size={18} />
       </button>
 
-      {/* Search bar — left side, capped width on desktop */}
+      {/* Search — grows to fill all free space */}
       <SearchBar />
 
-      {/* Spacer pushes the icons to the far right */}
-      <div className="flex-1" />
-
-      {/* Right-side icons */}
-      <div className="flex shrink-0 items-center gap-1">
+      {/* Right icons — ml-auto pushes them to the far right edge */}
+      <div className="ml-auto flex shrink-0 items-center gap-1">
         <div className="hidden lg:block">
           <ThemeToggle />
         </div>
