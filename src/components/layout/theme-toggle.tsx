@@ -24,7 +24,7 @@ function getServerSnapshot() {
   return false;
 }
 
-export function ThemeToggle() {
+export function useTheme() {
   const dark = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   const toggle = () => {
@@ -33,10 +33,15 @@ export function ThemeToggle() {
     try {
       window.localStorage.setItem("dtt-theme", next ? "dark" : "light");
     } catch {
-      /* storage blocked, ignore */
+      /* storage blocked */
     }
   };
 
+  return { dark, toggle };
+}
+
+export function ThemeToggle() {
+  const { dark, toggle } = useTheme();
   return (
     <button
       type="button"

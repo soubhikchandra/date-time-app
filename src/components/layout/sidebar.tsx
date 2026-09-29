@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Clock3, X } from "lucide-react";
 import { getToolsByCategory } from "@/config/tools";
 import { cn } from "@/lib/utils";
 
 const CATEGORY_LABELS: Record<string, string> = {
   dates: "Dates",
   time: "Time",
-  timezone: "Time & place",
+  timezone: "Time & Place",
   timers: "Timers",
 };
 
@@ -25,26 +25,40 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "sidebar-pattern fixed inset-y-0 left-0 z-40 w-[280px] shrink-0 overflow-y-auto border-r border-border bg-card/92 px-4 py-5 backdrop-blur-xl transition-transform",
-        "lg:sticky lg:top-[68px] lg:z-auto lg:h-[calc(100dvh-68px)] lg:translate-x-0",
+        "sidebar-pattern fixed inset-y-0 left-0 z-40 flex w-[280px] shrink-0 flex-col border-r border-border bg-card/95 backdrop-blur-xl transition-transform",
+        "lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:translate-x-0",
         open ? "translate-x-0" : "-translate-x-full"
       )}
     >
-      <div className="mb-5 flex items-center justify-between lg:hidden">
-        <span className="font-mono text-[10px] uppercase tracking-[.2em] text-muted-foreground">
-          Menu
-        </span>
+      {/* Brand */}
+      <div className="flex items-center justify-between border-b border-border px-5 py-5">
+        <Link href="/" onClick={onClose} className="flex items-center gap-3">
+          <span className="relative grid size-10 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/15">
+            <Clock3 size={20} />
+            <span className="absolute -right-1 -top-1 size-2.5 rounded-full bg-accent" />
+          </span>
+          <span>
+            <strong className="block text-sm font-extrabold tracking-[-.03em]">
+              minutehand
+            </strong>
+            <small className="font-mono text-[9px] uppercase tracking-[.18em] text-muted-foreground">
+              date &amp; time toolkit
+            </small>
+          </span>
+        </Link>
+
         <button
           type="button"
           onClick={onClose}
-          className="grid size-9 place-items-center rounded-xl text-muted-foreground hover:bg-muted"
           aria-label="Close menu"
+          className="grid size-9 place-items-center rounded-xl text-muted-foreground hover:bg-muted lg:hidden"
         >
-          ✕
+          <X size={16} />
         </button>
       </div>
 
-      <nav className="space-y-6">
+      {/* Nav */}
+      <nav className="flex-1 space-y-6 overflow-y-auto px-4 py-5">
         {Object.entries(groups).map(([category, tools]) => (
           <div key={category}>
             <p className="mb-2 px-3 font-mono text-[10px] font-medium uppercase tracking-[.2em] text-muted-foreground">
@@ -80,6 +94,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </div>
         ))}
       </nav>
+
+      {/* Footer */}
+      <div className="flex items-center gap-2 border-t border-border px-5 py-4 text-xs text-muted-foreground">
+        <span className="size-2 rounded-full bg-accent" />
+        Runs locally in your browser
+      </div>
     </aside>
   );
 }

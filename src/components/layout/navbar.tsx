@@ -1,47 +1,53 @@
 "use client";
 
-import Link from "next/link";
-import { Menu } from "lucide-react";
+import { History, Menu } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
+import { AccountMenu } from "./account-menu";
+import { SearchBar } from "./search-bar";
+import { useHistory } from "@/components/history/history-context";
 
 interface NavbarProps {
-  onMenuClick?: () => void;
+  onMenuClick: () => void;
 }
 
 export function Navbar({ onMenuClick }: NavbarProps) {
+  const { open, entries } = useHistory();
+
   return (
-    <header className="sticky top-0 z-30 flex h-[68px] items-center justify-between border-b border-border bg-background/82 px-4 backdrop-blur-xl sm:px-6">
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border bg-background/85 px-3 backdrop-blur-xl sm:px-5">
+      <button
+        type="button"
+        onClick={onMenuClick}
+        aria-label="Open menu"
+        className="grid size-9 shrink-0 place-items-center rounded-xl text-muted-foreground transition hover:bg-muted hover:text-foreground lg:hidden"
+      >
+        <Menu size={18} />
+      </button>
+
+      <SearchBar />
+
+      <div className="flex-1" />
+
+      <div className="flex shrink-0 items-center gap-1">
+        <div className="hidden lg:block">
+          <ThemeToggle />
+        </div>
+
         <button
           type="button"
-          onClick={onMenuClick}
-          aria-label="Toggle menu"
-          className="grid size-10 place-items-center rounded-xl border border-border bg-card text-muted-foreground lg:hidden"
+          onClick={open}
+          aria-label="History"
+          className="relative grid size-9 place-items-center rounded-xl text-muted-foreground transition hover:bg-muted hover:text-foreground"
         >
-          <Menu size={18} />
+          <History size={16} />
+          {entries.length > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 grid min-w-[16px] place-items-center rounded-full bg-accent px-1 font-mono text-[9px] font-bold text-accent-foreground">
+              {entries.length > 9 ? "9+" : entries.length}
+            </span>
+          )}
         </button>
 
-        <Link href="/" className="flex items-center gap-3">
-          <span className="relative grid size-10 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/15">
-            🕒
-            <span className="absolute -right-1 -top-1 size-2.5 rounded-full bg-accent" />
-          </span>
-          <span className="hidden sm:block">
-            <strong className="block text-sm font-extrabold tracking-[-.03em]">
-              minutehand
-            </strong>
-            <small className="font-mono text-[9px] uppercase tracking-[.18em] text-muted-foreground">
-              date &amp; time toolkit
-            </small>
-          </span>
-        </Link>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <span className="hidden text-xs font-semibold text-muted-foreground sm:inline">
-          Runs locally in your browser
-        </span>
-        <ThemeToggle />
+        <AccountMenu />
       </div>
     </header>
   );
