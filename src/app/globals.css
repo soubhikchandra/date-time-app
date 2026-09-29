@@ -73,14 +73,32 @@
   --shadow-soft: 0 18px 50px rgba(0, 0, 0, 0.22);
 }
 
+/* ------------------------------------------------------------------ */
+/*  Base                                                               */
+/* ------------------------------------------------------------------ */
+
 @layer base {
   * { @apply border-border; }
+
+  html {
+    /* Fallback color lives on <html>, not <body> */
+    background-color: hsl(var(--background));
+  }
+
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    /* IMPORTANT:
+       - no bg-background   → would cover the fixed image layer
+       - no position: relative → would create a stacking context
+       Both are required for the background pseudo-element below. */
+    @apply font-sans antialiased text-foreground;
     min-width: 320px;
   }
+
   button, input, select { font: inherit; }
-  button:focus-visible, input:focus-visible, select:focus-visible {
+
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible {
     outline: 3px solid hsl(var(--ring) / .28);
     outline-offset: 2px;
   }
@@ -91,15 +109,69 @@
   .text-balance { text-wrap: balance; }
 }
 
-.app-shell {
-  background:
-    radial-gradient(circle at 93% 4%, hsl(var(--accent) / .10), transparent 23rem),
-    radial-gradient(circle at 14% 88%, hsl(var(--primary) / .06), transparent 26rem),
-    hsl(var(--background));
+/* ------------------------------------------------------------------ */
+/*  Full-page background illustration                                  */
+/*  Fixed pseudo-element → always viewport-sized, zoom-proof.          */
+/* ------------------------------------------------------------------ */
+
+/* Image layer (behind everything) */
+.app-shell::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image: url("/mobile-background.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
+/* Veil layer (above image, below content) — mobile-first: stronger */
+.app-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: hsl(var(--background) / .75);
+  backdrop-filter: blur(2px);
+}
+
+.dark .app-shell::before {
+  background: hsl(var(--background) / .92);
+}
+
+/* Tablet and up: landscape image + lighter veil */
+@media (min-width: 640px) {
+  .app-shell::after {
+    background-image: url("/background.png");
+  }
+
+  .app-shell::before {
+    background: hsl(var(--background) / .20);
+    backdrop-filter: blur(1px);
+  }
+
+  .dark .app-shell::before {
+    background: hsl(var(--background) / .85);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Decorative patterns, cards, animations                             */
+/* ------------------------------------------------------------------ */
+
 .sidebar-pattern {
-  background-image: linear-gradient(135deg, hsl(var(--primary) / .035) 25%, transparent 25%, transparent 50%, hsl(var(--primary) / .035) 50%, hsl(var(--primary) / .035) 75%, transparent 75%);
+  background-image: linear-gradient(
+    135deg,
+    hsl(var(--primary) / .035) 25%,
+    transparent 25%,
+    transparent 50%,
+    hsl(var(--primary) / .035) 50%,
+    hsl(var(--primary) / .035) 75%,
+    transparent 75%
+  );
   background-size: 28px 28px;
 }
 
@@ -108,19 +180,31 @@
   animation: rise-in .45s ease both;
 }
 
-.tool-nav-item { transition: background-color .2s ease, color .2s ease, transform .2s ease; }
+.tool-nav-item {
+  transition: background-color .2s ease, color .2s ease, transform .2s ease;
+}
 .tool-nav-item:hover { transform: translateX(2px); }
+
 .result-pop { animation: result-pop .35s ease both; }
-.ticker { font-variant-numeric: tabular-nums; letter-spacing: -.04em; }
+
+.ticker {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.04em;
+}
 
 @keyframes rise-in {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
 @keyframes result-pop {
   from { opacity: 0; transform: scale(.985) translateY(4px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
+
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
 }

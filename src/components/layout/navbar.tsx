@@ -14,7 +14,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
   const { open, entries } = useHistory();
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border bg-background/85 px-3 backdrop-blur-xl sm:px-5">
+    <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-border bg-background/85 px-3 backdrop-blur-xl sm:gap-3 sm:px-5">
       <button
         type="button"
         onClick={onMenuClick}
@@ -24,9 +24,8 @@ export function Navbar({ onMenuClick }: NavbarProps) {
         <Menu size={18} />
       </button>
 
+      {/* Search grows to fill all remaining space on mobile */}
       <SearchBar />
-
-      <div className="flex-1" />
 
       <div className="flex shrink-0 items-center gap-1">
         <div className="hidden lg:block">
