@@ -20,7 +20,7 @@ export function ToolCardHeader({ slug, className }: ToolCardHeaderProps) {
   const Icon = tool.icon;
 
   return (
-    <div className={cn("mb-7 flex items-start gap-4", className)}>
+    <div className={cn("mb-7 flex items-center gap-4", className)}>
       <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
         <Icon size={23} strokeWidth={1.8} />
       </div>

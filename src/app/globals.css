@@ -83,6 +83,13 @@
   html {
     /* Fallback color lives on <html>, not <body> */
     background-color: hsl(var(--background));
+    /* Native controls (date pickers, scrollbars) follow the light theme by default */
+    color-scheme: light;
+  }
+
+  .dark html,
+  html.dark {
+    color-scheme: dark;
   }
 
   body {
@@ -102,6 +109,27 @@
     outline: 3px solid hsl(var(--ring) / .28);
     outline-offset: 2px;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Native date / datetime pickers                                     */
+/*  color-scheme flips the popup to a dark background in dark mode.    */
+/* ------------------------------------------------------------------ */
+
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"],
+input[type="month"],
+input[type="week"] {
+  color-scheme: light;
+}
+
+.dark input[type="date"],
+.dark input[type="datetime-local"],
+.dark input[type="time"],
+.dark input[type="month"],
+.dark input[type="week"] {
+  color-scheme: dark;
 }
 
 @layer utilities {
