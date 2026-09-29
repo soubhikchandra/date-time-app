@@ -1,6 +1,3 @@
-//purpose of this file:
-
-
 import {
   differenceInYears,
   differenceInMonths,

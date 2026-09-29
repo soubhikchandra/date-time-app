@@ -12,12 +12,38 @@ const CATEGORY_LABELS: Record<string, string> = {
   timers: "Timers",
 };
 
-export function Sidebar() {
+interface SidebarProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
   const groups = getToolsByCategory();
 
   return (
-    <aside className="hidden w-64 shrink-0 overflow-y-auto border-r border-gray-200 bg-white p-4 md:block">
+    <aside
+      className={cn(
+        // base
+        "fixed inset-y-0 left-0 z-40 w-64 shrink-0 overflow-y-auto border-r border-gray-200 bg-white p-4 transition-transform duration-200",
+        // desktop: static
+        "lg:static lg:z-auto lg:translate-x-0",
+        // mobile: slide in/out
+        open ? "translate-x-0" : "-translate-x-full"
+      )}
+    >
+      <div className="mb-4 flex items-center justify-between lg:hidden">
+        <span className="font-semibold text-gray-900">Menu</span>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-md p-1 text-gray-500 hover:bg-gray-100"
+          aria-label="Close menu"
+        >
+          ✕
+        </button>
+      </div>
+
       <nav className="space-y-6">
         {Object.entries(groups).map(([category, tools]) => (
           <div key={category}>
@@ -33,6 +59,7 @@ export function Sidebar() {
                   <li key={tool.slug}>
                     <Link
                       href={href}
+                      onClick={onClose}
                       className={cn(
                         "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition",
                         active

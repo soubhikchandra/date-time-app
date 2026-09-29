@@ -1,4 +1,4 @@
-//what is utils file means?
+//src/lib/utils.ts
 
 /** Tiny classname joiner — replaces clsx, no dependency. */
 export function cn(...parts: Array<string | false | null | undefined>) {
@@ -9,4 +9,3 @@ export function formatNumber(n: number): string {
   return n.toLocaleString();
 }
 
-// what are this code means for? purpose with example:

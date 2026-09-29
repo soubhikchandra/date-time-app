@@ -23,19 +23,3 @@ export interface ToolConfig {
   icon: LucideIcon;
   calculator: CalculatorKey;
 }
-
-/* 
-
-what is this toolconfig?
-export interface ToolConfig {
-  slug: string;
-  name: string;
-  category: ToolCategory;//why category requires?
-  description: string;
-  icon: LucideIcon;
-  calculator: CalculatorKey; // what is use for ?
-}
-
-what is the meaning of slug?
-
-*/

@@ -11,7 +11,7 @@ import {
   Earth,
   CalendarDays,
 } from "lucide-react";
-import type { ToolConfig } from "@/types/tools";  //why type has written?
+import type { ToolConfig } from "@/types/tools";
 
 
 export const TOOLS: ToolConfig[] = [
@@ -36,4 +36,8 @@ export const getToolsByCategory = (): Record<string, ToolConfig[]> =>
   TOOLS.reduce<Record<string, ToolConfig[]>>((acc, t) => {
     (acc[t.category] ??= []).push(t);
     return acc;
-  }, {});// i dont get this code:
+  }, {});
+
+// slug is identifire tool on URL then it find the Tool key then get the correct component.
+
+
