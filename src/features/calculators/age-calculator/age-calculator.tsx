@@ -1,53 +1,146 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Card } from "@/components/ui/card";
+import { Calculator, Check, Copy } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { ResultCard } from "@/components/ui/result-card";
-import { formatNumber } from "@/lib/utils";
-import { getAgeFromInput } from "./logic";
+import { ResultPanel } from "@/components/ui/result-card";
+import { BreakdownCard } from "@/components/ui/breakdown-card";
+import { ToolCardHeader } from "@/components/ui/tool-card-header";
+import { dateLabel, isoToday, localDate } from "@/lib/date-time";
+import { getAgeFromInput, getAgeBreakdown } from "./logic";
+
+function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1400);
+    } catch {
+      /* clipboard blocked */
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      className="inline-flex items-center gap-1.5 text-xs font-bold text-primary transition hover:opacity-80"
+    >
+      {copied ? <Check size={13} /> : <Copy size={13} />}
+      {copied ? "Copied" : "Copy result"}
+    </button>
+  );
+}
 
 export function AgeCalculator() {
-  const [dob, setDob] = useState("");
+  const [birth, setBirth] = useState("1990-06-14");
+  const [asOf, setAsOf] = useState(isoToday());
 
-  const result = useMemo(() => getAgeFromInput(dob), [dob]);
+  const age = useMemo(
+    () => (birth && asOf ? getAgeFromInput(birth, asOf) : null),
+    [birth, asOf]
+  );
+
+  const breakdown = useMemo(
+    () => (birth && asOf ? getAgeBreakdown(birth, asOf) : null),
+    [birth, asOf]
+  );
 
   return (
     <div className="space-y-6">
-      <Card>
-        <Input
-          label="Date of birth"
-          type="date"
-          name="dob"
-          value={dob}
-          max={new Date().toISOString().split("T")[0]}
-          onChange={(e) => setDob(e.target.value)}
+      <section className="tool-card rounded-3xl border border-border bg-card p-5 sm:p-7">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,.9fr)] lg:gap-8">
+          {/* LEFT COLUMN: header + form stacked */}
+          <div className="min-w-0">
+            <ToolCardHeader slug="age-calculator" />
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Input
+                label="Date of birth"
+                type="date"
+                name="birth"
+                value={birth}
+                max={isoToday()}
+                onChange={(e) => setBirth(e.target.value)}
+              />
+              <Input
+                label="Calculate age on"
+                type="date"
+                name="asOf"
+                value={asOf}
+                onChange={(e) => setAsOf(e.target.value)}
+              />
+            </div>
+
+            {birth && asOf && !age && (
+              <p className="mt-4 text-sm font-semibold text-destructive">
+                The comparison date needs to be after the birth date.
+              </p>
+            )}
+
+            <div className="mt-7 flex items-center gap-2 text-xs text-muted-foreground">
+              <Calculator size={15} className="text-primary" />
+              <span>Updates as you type · inclusive calendar calculation</span>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN: result panel, top-aligned with header */}
+          {age ? (
+            <ResultPanel title="Your age">
+              <p className="ticker font-mono text-5xl font-medium tracking-[-.08em] text-foreground">
+                {age.years}
+                <span className="text-2xl text-muted-foreground">y</span>{" "}
+                {age.months}
+                <span className="text-2xl text-muted-foreground">m</span>{" "}
+                {age.days}
+                <span className="text-2xl text-muted-foreground">d</span>
+              </p>
+              <p className="mt-3 text-sm text-muted-foreground">
+                That is {age.totalDays.toLocaleString()} days of lived time.
+              </p>
+              <div className="mt-6 flex items-center justify-between border-t border-primary/10 pt-4">
+                <span className="text-xs text-muted-foreground">
+                  As of {asOf ? dateLabel(localDate(asOf)) : "—"}
+                </span>
+                <CopyButton
+                  value={`${age.years} years, ${age.months} months, ${age.days} days`}
+                />
+              </div>
+            </ResultPanel>
+          ) : (
+            <ResultPanel empty>
+              <p className="text-sm leading-6 text-muted-foreground">
+                Add a birth date and a valid comparison date to see an exact age.
+              </p>
+            </ResultPanel>
+          )}
+        </div>
+      </section>
+
+      {breakdown && (
+        <BreakdownCard
+          title="Age breakdown"
+          rows={[
+            {
+              label: "Age in Months",
+              value: `${breakdown.months.total.toLocaleString()} months, ${
+                breakdown.months.remainderWeeks
+              } week${breakdown.months.remainderWeeks === 1 ? "" : "s"}, and ${
+                breakdown.months.remainderDays
+              } day${breakdown.months.remainderDays === 1 ? "" : "s"}`,
+            },
+            {
+              label: "Age in Weeks",
+              value: `${breakdown.weeks.total.toLocaleString()} weeks and ${
+                breakdown.weeks.remainderDays
+              } day${breakdown.weeks.remainderDays === 1 ? "" : "s"}`,
+            },
+            {
+              label: "Age in Days",
+              value: `${breakdown.days.toLocaleString()} days`,
+            },
+          ]}
         />
-      </Card>
-
-      {result && (
-        <ResultCard title="Your age">
-          <p className="text-2xl font-bold">
-            {result.years} <span className="text-base font-normal">years</span>{" "}
-            {result.months} <span className="text-base font-normal">months</span>{" "}
-            {result.days} <span className="text-base font-normal">days</span>
-          </p>
-          <p className="mt-2 text-sm text-gray-600">
-            That&apos;s <strong>{formatNumber(result.totalDays)}</strong> total days.
-          </p>
-        </ResultCard>
-      )}
-
-      {!result && dob && (
-        <p className="text-sm text-red-500">
-          Please pick a valid date in the past.
-        </p>
-      )}
-
-      {!dob && (
-        <p className="text-sm text-gray-500">
-          Pick a date above to see your exact age.
-        </p>
       )}
     </div>
   );

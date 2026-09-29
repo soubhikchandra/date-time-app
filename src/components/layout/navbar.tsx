@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Menu} from "lucide-react";
+import { Menu } from "lucide-react";
+import { ThemeToggle } from "./theme-toggle";
 
 interface NavbarProps {
   onMenuClick?: () => void;
@@ -9,25 +10,39 @@ interface NavbarProps {
 
 export function Navbar({ onMenuClick }: NavbarProps) {
   return (
-    <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-[68px] items-center justify-between border-b border-border bg-background/82 px-4 backdrop-blur-xl sm:px-6">
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={onMenuClick}
           aria-label="Toggle menu"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-md text-gray-700 hover:bg-gray-100 lg:hidden"
+          className="grid size-10 place-items-center rounded-xl border border-border bg-card text-muted-foreground lg:hidden"
         >
-          <Menu className="h-5 w-5" />
+          <Menu size={18} />
         </button>
 
-        <Link href="/" className="text-lg font-bold text-gray-900">
-          🕒 Date &amp; Time Toolkit
+        <Link href="/" className="flex items-center gap-3">
+          <span className="relative grid size-10 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/15">
+            🕒
+            <span className="absolute -right-1 -top-1 size-2.5 rounded-full bg-accent" />
+          </span>
+          <span className="hidden sm:block">
+            <strong className="block text-sm font-extrabold tracking-[-.03em]">
+              minutehand
+            </strong>
+            <small className="font-mono text-[9px] uppercase tracking-[.18em] text-muted-foreground">
+              date &amp; time toolkit
+            </small>
+          </span>
         </Link>
       </div>
 
-      <span className="hidden text-sm text-gray-500 sm:inline">
-        {new Date().getFullYear()} · runs in your browser
-      </span>
+      <div className="flex items-center gap-2">
+        <span className="hidden text-xs font-semibold text-muted-foreground sm:inline">
+          Runs locally in your browser
+        </span>
+        <ThemeToggle />
+      </div>
     </header>
   );
 }

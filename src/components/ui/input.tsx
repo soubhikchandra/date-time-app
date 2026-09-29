@@ -3,26 +3,33 @@ import { cn } from "@/lib/utils";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
+  hint?: string;
 }
 
-export function Input({ label, className, id, ...props }: InputProps) {
+export function Input({ label, hint, className, id, ...props }: InputProps) {
   const inputId = id || props.name;
   return (
-    <div className="flex flex-col gap-1">
+    <label
+      htmlFor={inputId}
+      className="grid gap-2 text-sm font-bold text-foreground"
+    >
       {label && (
-        <label htmlFor={inputId} className="text-sm font-medium text-gray-700">
-          {label}
-        </label>
+        <span className="flex items-baseline justify-between gap-3">
+          <span>{label}</span>
+          {hint && (
+            <span className="font-normal text-muted-foreground">{hint}</span>
+          )}
+        </span>
       )}
       <input
         id={inputId}
         className={cn(
-          "rounded-md border border-gray-300 px-3 py-2 text-sm",
-          "focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500",
+          "h-11 w-full rounded-xl border border-input bg-background/70 px-3.5 text-sm text-foreground shadow-sm transition",
+          "placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none",
           className
         )}
         {...props}
       />
-    </div>
+    </label>
   );
 }

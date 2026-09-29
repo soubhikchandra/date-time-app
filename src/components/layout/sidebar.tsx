@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ChevronRight } from "lucide-react";
 import { getToolsByCategory } from "@/config/tools";
 import { cn } from "@/lib/utils";
 
 const CATEGORY_LABELS: Record<string, string> = {
   dates: "Dates",
   time: "Time",
-  timezone: "Time Zones",
+  timezone: "Time & place",
   timers: "Timers",
 };
 
@@ -24,20 +25,19 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   return (
     <aside
       className={cn(
-        // base
-        "fixed inset-y-0 left-0 z-40 w-64 shrink-0 overflow-y-auto border-r border-gray-200 bg-white p-4 transition-transform duration-200",
-        // desktop: static
-        "lg:static lg:z-auto lg:translate-x-0",
-        // mobile: slide in/out
+        "sidebar-pattern fixed inset-y-0 left-0 z-40 w-[280px] shrink-0 overflow-y-auto border-r border-border bg-card/92 px-4 py-5 backdrop-blur-xl transition-transform",
+        "lg:sticky lg:top-[68px] lg:z-auto lg:h-[calc(100dvh-68px)] lg:translate-x-0",
         open ? "translate-x-0" : "-translate-x-full"
       )}
     >
-      <div className="mb-4 flex items-center justify-between lg:hidden">
-        <span className="font-semibold text-gray-900">Menu</span>
+      <div className="mb-5 flex items-center justify-between lg:hidden">
+        <span className="font-mono text-[10px] uppercase tracking-[.2em] text-muted-foreground">
+          Menu
+        </span>
         <button
           type="button"
           onClick={onClose}
-          className="rounded-md p-1 text-gray-500 hover:bg-gray-100"
+          className="grid size-9 place-items-center rounded-xl text-muted-foreground hover:bg-muted"
           aria-label="Close menu"
         >
           ✕
@@ -47,10 +47,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <nav className="space-y-6">
         {Object.entries(groups).map(([category, tools]) => (
           <div key={category}>
-            <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+            <p className="mb-2 px-3 font-mono text-[10px] font-medium uppercase tracking-[.2em] text-muted-foreground">
               {CATEGORY_LABELS[category] ?? category}
             </p>
-            <ul className="space-y-1">
+            <ul className="grid gap-1">
               {tools.map((tool) => {
                 const href = `/tools/${tool.slug}`;
                 const active = pathname === href;
@@ -61,14 +61,17 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                       href={href}
                       onClick={onClose}
                       className={cn(
-                        "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition",
+                        "tool-nav-item flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left",
                         active
-                          ? "bg-blue-50 font-medium text-blue-700"
-                          : "text-gray-700 hover:bg-gray-100"
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       )}
                     >
-                      <Icon className="h-4 w-4" />
-                      {tool.name}
+                      <Icon size={16} strokeWidth={active ? 2.2 : 1.8} />
+                      <span className="min-w-0 flex-1 truncate text-[13px] font-bold">
+                        {tool.name}
+                      </span>
+                      {active && <ChevronRight size={14} />}
                     </Link>
                   </li>
                 );

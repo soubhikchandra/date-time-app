@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { AppShell } from "@/components/layout/app-shell";
 
@@ -7,10 +8,22 @@ export const metadata: Metadata = {
   description: "11 date and time calculators in one place.",
 };
 
+const themeScript = `
+try {
+  var t = localStorage.getItem('dtt-theme');
+  if (t === 'dark') document.documentElement.classList.add('dark');
+} catch (e) {}
+`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="flex min-h-screen flex-col bg-gray-50 text-gray-900">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <Script id="theme-init" strategy="beforeInteractive">
+          {themeScript}
+        </Script>
+      </head>
+      <body className="app-shell min-h-screen text-foreground">
         <AppShell>{children}</AppShell>
       </body>
     </html>
