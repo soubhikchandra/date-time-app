@@ -1,5 +1,4 @@
 @import "tailwindcss";
-
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -76,33 +75,21 @@
 /* ------------------------------------------------------------------ */
 /*  Base                                                               */
 /* ------------------------------------------------------------------ */
-
 @layer base {
   * { @apply border-border; }
-
   html {
-    /* Fallback color lives on <html>, not <body> */
     background-color: hsl(var(--background));
-    /* Native controls (date pickers, scrollbars) follow the light theme by default */
     color-scheme: light;
   }
-
   .dark html,
   html.dark {
     color-scheme: dark;
   }
-
   body {
-    /* IMPORTANT:
-       - no bg-background   → would cover the fixed image layer
-       - no position: relative → would create a stacking context
-       Both are required for the background pseudo-element below. */
     @apply font-sans antialiased text-foreground;
     min-width: 320px;
   }
-
   button, input, select { font: inherit; }
-
   button:focus-visible,
   input:focus-visible,
   select:focus-visible {
@@ -113,22 +100,11 @@
 
 /* ------------------------------------------------------------------ */
 /*  Native date / datetime pickers                                     */
-/*  color-scheme flips the popup to a dark background in dark mode.    */
 /* ------------------------------------------------------------------ */
-
-input[type="date"],
-input[type="datetime-local"],
-input[type="time"],
-input[type="month"],
-input[type="week"] {
+input[type="date"], input[type="datetime-local"], input[type="time"], input[type="month"], input[type="week"] {
   color-scheme: light;
 }
-
-.dark input[type="date"],
-.dark input[type="datetime-local"],
-.dark input[type="time"],
-.dark input[type="month"],
-.dark input[type="week"] {
+.dark input[type="date"], .dark input[type="datetime-local"], .dark input[type="time"], .dark input[type="month"], .dark input[type="week"] {
   color-scheme: dark;
 }
 
@@ -139,12 +115,8 @@ input[type="week"] {
 
 /* ------------------------------------------------------------------ */
 /*  Full-page background illustration                                  */
-/*  Fixed pseudo-element → always viewport-sized, zoom-proof.          */
-/*  Mobile  → mobile-responsive.png                                    */
-/*  Desktop → background.png                                           */
+/*  Fixed position ensures it maps consistently to the screen bounds   */
 /* ------------------------------------------------------------------ */
-
-/* Image layer (behind everything) */
 .app-shell::after {
   content: "";
   position: fixed;
@@ -155,9 +127,9 @@ input[type="week"] {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
-/* Veil layer (above image, below content) — mobile-first: stronger */
 .app-shell::before {
   content: "";
   position: fixed;
@@ -177,12 +149,10 @@ input[type="week"] {
   .app-shell::after {
     background-image: url("/background.png");
   }
-
   .app-shell::before {
     background: hsl(var(--background) / .20);
     backdrop-filter: blur(1px);
   }
-
   .dark .app-shell::before {
     background: hsl(var(--background) / .85);
   }
@@ -191,7 +161,6 @@ input[type="week"] {
 /* ------------------------------------------------------------------ */
 /*  Decorative patterns, cards, animations                             */
 /* ------------------------------------------------------------------ */
-
 .sidebar-pattern {
   background-image: linear-gradient(
     135deg,
@@ -240,31 +209,24 @@ input[type="week"] {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Dark mode scrollbar — subtle, theme-matched                        */
+/*  Dark mode scrollbar                                                */
 /* ------------------------------------------------------------------ */
-
 .dark {
-  /* Firefox */
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--primary) / .55) transparent;
 }
-
 .dark * {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--primary) / .55) transparent;
 }
-
-/* WebKit (Chrome, Edge, Safari) */
 .dark ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
-
 .dark ::-webkit-scrollbar-track {
   background: hsl(var(--background) / .35);
   border-radius: 999px;
 }
-
 .dark ::-webkit-scrollbar-thumb {
   background: hsl(var(--primary) / .45);
   border-radius: 999px;
@@ -272,20 +234,16 @@ input[type="week"] {
   background-clip: padding-box;
   transition: background-color .2s ease;
 }
-
 .dark ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary) / .70);
   background-clip: padding-box;
   border: 2px solid transparent;
 }
-
 .dark ::-webkit-scrollbar-thumb:active {
   background: hsl(var(--primary) / .85);
   background-clip: padding-box;
   border: 2px solid transparent;
 }
-
-/* Corner (where horizontal + vertical meet) */
 .dark ::-webkit-scrollbar-corner {
   background: transparent;
 }

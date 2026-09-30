@@ -1,16 +1,23 @@
 "use client";
 
 import { History, Menu } from "lucide-react";
-import { ThemeToggle } from "./theme-toggle";
 import { AccountMenu } from "./account-menu";
 import { SearchBar } from "./search-bar";
 import { useHistory } from "@/components/history/history-context";
 
 interface NavbarProps {
   onMenuClick: () => void;
+  user: { email: string; name?: string } | null;
+  onAuthSuccess: (u: { email: string; name?: string }) => void;
+  onLogout: () => void;
 }
 
-export function Navbar({ onMenuClick }: NavbarProps) {
+export function Navbar({
+  onMenuClick,
+  user,
+  onAuthSuccess,
+  onLogout,
+}: NavbarProps) {
   const { open, entries } = useHistory();
 
   return (
@@ -25,15 +32,11 @@ export function Navbar({ onMenuClick }: NavbarProps) {
         <Menu size={18} />
       </button>
 
-      {/* Search — grows to fill all free space */}
+      {/* Search — grows to fill free space */}
       <SearchBar />
 
-      {/* Right icons — ml-auto pushes them to the far right edge */}
+      {/* Right icons — pinned right */}
       <div className="ml-auto flex shrink-0 items-center gap-1">
-        <div className="hidden lg:block">
-          <ThemeToggle />
-        </div>
-
         <button
           type="button"
           onClick={open}
@@ -48,7 +51,11 @@ export function Navbar({ onMenuClick }: NavbarProps) {
           )}
         </button>
 
-        <AccountMenu />
+        <AccountMenu
+          user={user}
+          onAuthSuccess={onAuthSuccess}
+          onLogout={onLogout}
+        />
       </div>
     </header>
   );

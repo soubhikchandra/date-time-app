@@ -43,6 +43,7 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         timestamp: Date.now(),
       };
+
       // Skip if same tool + same signature already saved.
       setEntries((prev) => {
         const dup = prev.some(
@@ -50,6 +51,22 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
         );
         if (dup) return prev;
         return [full, ...prev].slice(0, 50);
+      });
+
+      // Persist to the signed-in user's account.
+      // No-op (401) for anonymous users — silently swallowed.
+      void fetch("/api/account/activity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          tool: entry.tool,
+          toolName: entry.toolName,
+          summary: entry.summary,
+          details: entry.details,
+        }),
+      }).catch(() => {
+        /* silent — user may be anonymous or offline */
       });
     },
     []
