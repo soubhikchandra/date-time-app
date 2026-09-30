@@ -111,6 +111,16 @@
   --row-days-icon: #159b6a;
   --row-days-text: #245a47;
 
+  /* Category colors — light */
+  --cat-dates-bg: #e9e7ff;
+  --cat-dates-accent: #554cc4;
+  --cat-time-bg: #e5f0ff;
+  --cat-time-accent: #2e78f0;
+  --cat-timezone-bg: #fde8f2;
+  --cat-timezone-accent: #f04f96;
+  --cat-timers-bg: #fff0df;
+  --cat-timers-accent: #f58a20;
+
   /* Shadows */
   --shadow-card: 0 8px 24px rgba(48, 57, 120, 0.07),
     0 2px 6px rgba(48, 57, 120, 0.04);
@@ -199,6 +209,16 @@
   --row-days-icon: #32d39a;
   --row-days-text: #d9fff1;
 
+  /* Category colors — dark */
+  --cat-dates-bg: #29235d;
+  --cat-dates-accent: #8a73ff;
+  --cat-time-bg: #172f55;
+  --cat-time-accent: #5b9bff;
+  --cat-timezone-bg: #3a1c35;
+  --cat-timezone-accent: #ff63b0;
+  --cat-timers-bg: #3a2915;
+  --cat-timers-accent: #ff9f1c;
+
   /* Shadows */
   --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.035);
@@ -231,7 +251,7 @@
     min-width: 320px;
   }
 
-  /* Page background — theme-aware radial tint */
+  /* Page background — theme-aware radial tint (no image) */
   body::before {
     content: "";
     position: fixed;
@@ -360,48 +380,6 @@ input[type="week"] {
 }
 
 /* ================================================================== */
-/*  Full-page background illustration (light mode only)                */
-/* ================================================================== */
-.app-shell::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  pointer-events: none;
-  background-image: url("/mobile-responsive.png");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-}
-.dark .app-shell::after {
-  display: none;
-}
-
-.app-shell::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: hsl(var(--background) / 0.55);
-  backdrop-filter: blur(2px);
-}
-.dark .app-shell::before {
-  display: none;
-}
-
-@media (min-width: 640px) {
-  .app-shell::after {
-    background-image: url("/background.png");
-  }
-  .app-shell::before {
-    background: hsl(var(--background) / 0.2);
-    backdrop-filter: blur(1px);
-  }
-}
-
-/* ================================================================== */
 /*  Decorative patterns, animations                                    */
 /* ================================================================== */
 .tool-card {
@@ -501,8 +479,6 @@ input[type="week"] {
 /* ================================================================== */
 /*  HERO CARD — theme-aware                                            */
 /* ================================================================== */
-
-/* Light mode — with right-side purple glow */
 .hero-card {
   background:
     radial-gradient(
@@ -573,7 +549,6 @@ input[type="week"] {
   color: #a3add0;
 }
 
-/* Illustration glow — dark mode only */
 .dark .hero-illustration {
   filter: drop-shadow(0 12px 20px rgba(79, 67, 255, 0.25));
 }

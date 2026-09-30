@@ -50,6 +50,49 @@
 //   );
 // }
 
+// /* ------------------------------------------------------------------ */
+// /*  Mode glow — one active section at a time                           */
+// /* ------------------------------------------------------------------ */
+
+// // Swap to ORANGE_GLOW if you prefer orange.
+// const BLUE_GLOW =
+//   "border-blue-500/40 shadow-[0_0_6px_-2px_rgba(59,130,246,.20)]";
+// // const ORANGE_GLOW =
+// //   "border-orange-500/70 shadow-[0_0_22px_-2px_rgba(249,115,22,.55)]";
+// const ACTIVE_GLOW = BLUE_GLOW;
+
+// type Mode = "datetime" | "preset" | "custom" | null;
+
+// function ModeBox({
+//   active,
+//   dimmed,
+//   onActivate,
+//   className = "",
+//   children,
+// }: {
+//   active: boolean;
+//   dimmed: boolean;
+//   onActivate: () => void;
+//   className?: string;
+//   children: React.ReactNode;
+// }) {
+//   return (
+//     <div
+//       onPointerDownCapture={onActivate}
+//       onFocusCapture={onActivate}
+//       className={`rounded-2xl border p-3 transition-all duration-300 ${className} ${
+//         active
+//           ? ACTIVE_GLOW
+//           : dimmed
+//             ? "border-transparent opacity-40 grayscale"
+//             : "border-transparent"
+//       }`}
+//     >
+//       {children}
+//     </div>
+//   );
+// }
+
 // const TOOL_SLUG = "countdown";
 
 // /* Live tick — SSR-safe. Ticks 4x per second so the display changes exactly
@@ -91,6 +134,9 @@
 //   const [customUnit, setCustomUnit] = useState<CustomUnit>("minutes");
 //   // True when the user is driving the timer from the custom box.
 //   const [useCustom, setUseCustom] = useState(false);
+
+//   // Which section is currently "active" (gets the glow, others dim).
+//   const [mode, setMode] = useState<Mode>(null);
 
 //   const tick = useSyncExternalStore(subscribeTick, getTick, getServerTick);
 
@@ -149,6 +195,22 @@
 //   const alreadySaved = hasSignature(TOOL_SLUG, signature);
 //   const canSave = Boolean(parts) && !alreadySaved;
 
+//   /* ---------------- Mode activation ---------------- */
+
+//   // Selecting one section deselects the other two. Only when not running.
+//   const activate = (m: Exclude<Mode, null>) => {
+//     if (status !== "idle" || mode === m) return;
+//     setMode(m);
+//     if (m === "datetime") {
+//       setUseCustom(false);
+//       setDurationMs(null);
+//     } else if (m === "preset") {
+//       setUseCustom(false);
+//     } else {
+//       setUseCustom(true);
+//     }
+//   };
+
 //   /* ---------------- Controls ---------------- */
 
 //   const launch = (nowMs: number, targetMs: number, dur: number | null) => {
@@ -202,6 +264,7 @@
 
 //   const reset = () => {
 //     clearRun();
+//     setMode(null);
 //     setDurationMs(null);
 //     setUseCustom(false);
 //     setCustomValue("");
@@ -215,6 +278,7 @@
 //     if (!preset) return;
 //     const t = preset.target(new Date());
 //     clearRun();
+//     setMode("preset");
 //     setUseCustom(false);
 //     setDurationMs(preset.durationMs ?? null);
 //     setDateInput(toIso(t));
@@ -224,6 +288,7 @@
 //   // User edited the date/time manually.
 //   const changeTarget = () => {
 //     clearRun();
+//     setMode("datetime");
 //     setUseCustom(false);
 //     setDurationMs(null);
 //   };
@@ -273,33 +338,45 @@
 //           <div className="min-w-0">
 //             <ToolCardHeader slug={TOOL_SLUG} />
 
-//             <div className="grid gap-4 sm:grid-cols-2">
-//               <Input
-//                 label="Target date"
-//                 type="date"
-//                 name="date"
-//                 value={dateInput}
-//                 disabled={status === "running"}
-//                 onChange={(e) => {
-//                   changeTarget();
-//                   setDateInput(e.target.value);
-//                 }}
-//               />
-//               <Input
-//                 label="Target time"
-//                 type="time"
-//                 name="time"
-//                 value={timeInput}
-//                 disabled={status === "running"}
-//                 onChange={(e) => {
-//                   changeTarget();
-//                   setTimeInput(e.target.value);
-//                 }}
-//               />
-//             </div>
+//             {/* Date/time grid — ModeBox wrapped */}
+//             <ModeBox
+//               active={mode === "datetime"}
+//               dimmed={mode !== null && mode !== "datetime"}
+//               onActivate={() => activate("datetime")}
+//             >
+//               <div className="grid gap-4 sm:grid-cols-2">
+//                 <Input
+//                   label="Target date"
+//                   type="date"
+//                   name="date"
+//                   value={dateInput}
+//                   disabled={status === "running"}
+//                   onChange={(e) => {
+//                     changeTarget();
+//                     setDateInput(e.target.value);
+//                   }}
+//                 />
+//                 <Input
+//                   label="Target time"
+//                   type="time"
+//                   name="time"
+//                   value={timeInput}
+//                   disabled={status === "running"}
+//                   onChange={(e) => {
+//                     changeTarget();
+//                     setTimeInput(e.target.value);
+//                   }}
+//                 />
+//               </div>
+//             </ModeBox>
 
-//             {/* Presets */}
-//             <div className="mt-4">
+//             {/* Presets — ModeBox wrapped */}
+//             <ModeBox
+//               className="mt-4"
+//               active={mode === "preset"}
+//               dimmed={mode !== null && mode !== "preset"}
+//               onActivate={() => activate("preset")}
+//             >
 //               <p className="mb-2 font-mono text-[10px] uppercase tracking-[.18em] text-muted-foreground">
 //                 Quick set
 //               </p>
@@ -316,10 +393,15 @@
 //                   </button>
 //                 ))}
 //               </div>
-//             </div>
+//             </ModeBox>
 
-//             {/* Custom duration */}
-//             <div className="mt-4">
+//             {/* Custom duration — ModeBox wrapped */}
+//             <ModeBox
+//               className="mt-4"
+//               active={mode === "custom"}
+//               dimmed={mode !== null && mode !== "custom"}
+//               onActivate={() => activate("custom")}
+//             >
 //               <p className="mb-2 font-mono text-[10px] uppercase tracking-[.18em] text-muted-foreground">
 //                 Custom timer
 //               </p>
@@ -338,6 +420,7 @@
 //                     onChange={(e) => {
 //                       setCustomValue(e.target.value);
 //                       setUseCustom(true);
+//                       setMode("custom");
 //                     }}
 //                     onKeyDown={(e) => {
 //                       if (e.key === "Enter") {
@@ -353,7 +436,10 @@
 //                   disabled={status !== "idle"}
 //                   onChange={(e) => {
 //                     setCustomUnit(e.target.value as CustomUnit);
-//                     if (customValue.trim() !== "") setUseCustom(true);
+//                     if (customValue.trim() !== "") {
+//                       setUseCustom(true);
+//                       setMode("custom");
+//                     }
 //                   }}
 //                   className="min-h-10 rounded-xl border border-border bg-background/60 px-3 text-sm font-medium text-foreground outline-none transition focus:border-primary/60 disabled:opacity-40"
 //                 >
@@ -367,7 +453,7 @@
 //               {customError && (
 //                 <p className="mt-2 text-xs text-red-500">{customError}</p>
 //               )}
-//             </div>
+//             </ModeBox>
 
 //             {/* Controls */}
 //             <div className="mt-5 flex flex-wrap items-center gap-2">
@@ -522,7 +608,6 @@
 //     </div>
 //   );
 // }
-
 
 "use client";
 
@@ -857,7 +942,8 @@ export function Countdown() {
     : durationMs !== null || Boolean(target);
 
   return (
-    <div className="space-y-6">
+    // Changed space-y-6 to space-y-4 to match the tighter, more responsive feel
+    <div className="space-y-4">
       <section className="tool-card rounded-3xl border border-border bg-card p-5 sm:p-7">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,.9fr)] lg:gap-8">
           {/* LEFT: header + form */}
@@ -1041,7 +1127,7 @@ export function Countdown() {
               </Button>
             </div>
 
-            <div className="mt-7 flex items-start gap-2 text-xs text-muted-foreground">
+            <div className="mt-6 flex flex-wrap items-start gap-2 text-xs text-muted-foreground sm:mt-7">
               <Hourglass size={15} className="mt-0.5 shrink-0 text-primary" />
               <span>
                 Keeps counting even when the tab is in the background — the
@@ -1097,7 +1183,8 @@ export function Countdown() {
                   </div>
                 )}
 
-                <div className="mt-6 flex items-center justify-between border-t border-primary/10 pt-4">
+                {/* Added flex-wrap and gap-2 for mobile safety */}
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-primary/10 pt-4">
                   <span className="font-mono text-[10px] uppercase tracking-[.18em] text-muted-foreground">
                     {dateInput} · {timeInput}
                   </span>
@@ -1124,8 +1211,9 @@ export function Countdown() {
 
 function Unit({ value, label }: { value: number; label: string }) {
   return (
-    <div className="rounded-xl border border-primary/15 bg-primary/[.06] px-2 py-3 text-center">
-      <p className="ticker font-mono text-2xl font-medium leading-none tracking-[-.05em] text-foreground sm:text-3xl">
+    <div className="rounded-xl border border-primary/15 bg-primary/[.06] px-1 py-3 text-center sm:px-2">
+      {/* Applied fluid typography clamp to prevent layout breaking on mobile */}
+      <p className="ticker font-mono text-[clamp(18px,4.5vw,28px)] font-medium leading-none tracking-[-.05em] text-foreground">
         {String(value).padStart(2, "0")}
       </p>
       <p className="mt-1 font-mono text-[9px] uppercase tracking-[.18em] text-muted-foreground">

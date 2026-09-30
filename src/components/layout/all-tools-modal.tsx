@@ -8,16 +8,32 @@ import { ArrowRight, X } from "lucide-react";
 import { getToolsByCategory } from "@/config/tools";
 
 /* ------------------------------------------------------------------ */
-/*  Category meta — matches sidebar labels + accent colors            */
+/*  Category meta — theme-aware                                       */
 /* ------------------------------------------------------------------ */
 const CATEGORY_META: Record<
   string,
   { label: string; accent: string; bg: string }
 > = {
-  dates: { label: "Dates", accent: "#554CC4", bg: "#E9E7FF" },
-  time: { label: "Time", accent: "#2E78F0", bg: "#E5F0FF" },
-  timezone: { label: "Time & Place", accent: "#F04F96", bg: "#FDE8F2" },
-  timers: { label: "Timers", accent: "#F58A20", bg: "#FFF0DF" },
+  dates: {
+    label: "Dates",
+    accent: "var(--cat-dates-accent)",
+    bg: "var(--cat-dates-bg)",
+  },
+  time: {
+    label: "Time",
+    accent: "var(--cat-time-accent)",
+    bg: "var(--cat-time-bg)",
+  },
+  timezone: {
+    label: "Time & Place",
+    accent: "var(--cat-timezone-accent)",
+    bg: "var(--cat-timezone-bg)",
+  },
+  timers: {
+    label: "Timers",
+    accent: "var(--cat-timers-accent)",
+    bg: "var(--cat-timers-bg)",
+  },
 };
 
 /* ------------------------------------------------------------------ */
@@ -70,7 +86,8 @@ export function AllToolsModal({ isOpen, onClose }: AllToolsModalProps) {
       {/* Backdrop */}
       <div
         onClick={onClose}
-        className="absolute inset-0 bg-[#0B0D40]/40 backdrop-blur-sm"
+        className="absolute inset-0 backdrop-blur-sm"
+        style={{ backgroundColor: "rgba(11, 13, 64, 0.45)" }}
         aria-hidden="true"
       />
 
@@ -78,19 +95,23 @@ export function AllToolsModal({ isOpen, onClose }: AllToolsModalProps) {
       <div
         role="dialog"
         aria-label="All tools"
-        className="relative z-10 flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-[20px] border border-white/90 shadow-[0_20px_60px_rgba(70,65,150,0.25)]"
-        style={{ backgroundColor: "#FAFAFD" }}
+        className="relative z-10 flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-[20px]"
+        style={{
+          backgroundColor: "var(--surface-card)",
+          border: "1px solid var(--border-card)",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+        }}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between gap-3 px-6 py-5"
-          style={{ borderBottom: "1px solid #E6E7F7" }}
+          style={{ borderBottom: "1px solid var(--border-soft)" }}
         >
           <div className="min-w-0">
             <p
               className="uppercase"
               style={{
-                color: "#554CC4",
+                color: "var(--purple)",
                 fontSize: "11px",
                 fontWeight: 800,
                 letterSpacing: "1.6px",
@@ -100,11 +121,14 @@ export function AllToolsModal({ isOpen, onClose }: AllToolsModalProps) {
             </p>
             <h2
               className="mt-1 text-xl font-extrabold tracking-[-.02em]"
-              style={{ color: "#0B0D40" }}
+              style={{ color: "var(--text-primary)" }}
             >
               Every calculator in one place
             </h2>
-            <p className="mt-0.5 text-[12.5px]" style={{ color: "#7E83AF" }}>
+            <p
+              className="mt-0.5 text-[12.5px]"
+              style={{ color: "var(--text-secondary)" }}
+            >
               {totalTools} tools · Organized by category
             </p>
           </div>
@@ -113,7 +137,16 @@ export function AllToolsModal({ isOpen, onClose }: AllToolsModalProps) {
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="grid size-10 shrink-0 place-items-center rounded-full text-[#7E83AF] transition hover:bg-[#F0EEFF] hover:text-[#554CC4]"
+            className="grid size-10 shrink-0 place-items-center rounded-full transition"
+            style={{ color: "var(--text-muted)" }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--purple-light)";
+              e.currentTarget.style.color = "var(--purple)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+              e.currentTarget.style.color = "var(--text-muted)";
+            }}
           >
             <X size={18} />
           </button>
@@ -126,8 +159,8 @@ export function AllToolsModal({ isOpen, onClose }: AllToolsModalProps) {
               const meta =
                 CATEGORY_META[category] ?? {
                   label: category,
-                  accent: "#554CC4",
-                  bg: "#E9E7FF",
+                  accent: "var(--purple)",
+                  bg: "var(--purple-light)",
                 };
 
               return (
@@ -136,7 +169,7 @@ export function AllToolsModal({ isOpen, onClose }: AllToolsModalProps) {
                   <p
                     className="mb-2.5 uppercase"
                     style={{
-                      color: "#7E83AF",
+                      color: "var(--text-muted)",
                       fontSize: "10.5px",
                       fontWeight: 700,
                       letterSpacing: "1.4px",
@@ -156,16 +189,19 @@ export function AllToolsModal({ isOpen, onClose }: AllToolsModalProps) {
                           onClick={onClose}
                           className="group flex items-center gap-3 rounded-2xl p-3 transition hover:-translate-y-0.5"
                           style={{
-                            backgroundColor: "#F5F6FC",
+                            backgroundColor: "var(--surface-card-soft)",
                             border: "1px solid transparent",
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.borderColor = "#DCE0F0";
-                            e.currentTarget.style.backgroundColor = "#FAFAFD";
+                            e.currentTarget.style.borderColor =
+                              "var(--border-input)";
+                            e.currentTarget.style.backgroundColor =
+                              "var(--surface-card)";
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.borderColor = "transparent";
-                            e.currentTarget.style.backgroundColor = "#F5F6FC";
+                            e.currentTarget.style.backgroundColor =
+                              "var(--surface-card-soft)";
                           }}
                         >
                           <span
@@ -181,13 +217,13 @@ export function AllToolsModal({ isOpen, onClose }: AllToolsModalProps) {
                           <span className="min-w-0 flex-1">
                             <span
                               className="block truncate text-[13.5px] font-bold"
-                              style={{ color: "#0B0D40" }}
+                              style={{ color: "var(--text-primary)" }}
                             >
                               {tool.name}
                             </span>
                             <span
                               className="mt-0.5 block truncate text-[11.5px]"
-                              style={{ color: "#7E83AF" }}
+                              style={{ color: "var(--text-muted)" }}
                             >
                               {tool.description}
                             </span>
