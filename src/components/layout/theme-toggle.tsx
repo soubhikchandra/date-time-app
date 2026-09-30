@@ -40,6 +40,7 @@ export function useTheme() {
   return { dark, toggle };
 }
 
+// components/layout/theme-toggle.tsx  (only the ThemeToggle export)
 export function ThemeToggle() {
   const { dark, toggle } = useTheme();
   return (
@@ -47,9 +48,9 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label="Toggle theme"
-      className="grid size-9 place-items-center rounded-xl text-muted-foreground transition hover:bg-muted hover:text-foreground"
+      className="grid size-11 place-items-center rounded-full bg-white text-[#554CC4] shadow-[0_2px_8px_rgba(55,61,147,0.08)] transition hover:bg-[#F0EEFF]"
     >
-      {dark ? <Sun size={16} /> : <Moon size={16} />}
+      {dark ? <Sun size={17} /> : <Moon size={17} />}
     </button>
   );
 }

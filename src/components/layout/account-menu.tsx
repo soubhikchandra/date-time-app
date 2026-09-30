@@ -82,21 +82,21 @@ export function AccountMenu({ user, onAuthSuccess, onLogout }: AccountMenuProps)
   return (
     <div ref={ref} className="relative">
       {/* Single account icon — always visible */}
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-label="Account"
-        aria-expanded={open}
-        className="grid size-9 place-items-center rounded-xl text-muted-foreground transition hover:bg-muted hover:text-foreground"
-      >
-        {user ? (
-          <span className="grid size-7 place-items-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
-            {initial}
-          </span>
-        ) : (
-          <User size={16} />
-        )}
-      </button>
+<button
+  type="button"
+  onClick={() => setOpen((v) => !v)}
+  aria-label="Account"
+  aria-expanded={open}
+  className="grid size-10 shrink-0 place-items-center rounded-full bg-[#554CC4] text-white shadow-[0_2px_6px_rgba(85,76,196,0.28)] transition-colors duration-200 hover:brightness-110"
+>
+  {user ? (
+    <span className="text-[13px] font-bold">
+      {initial}
+    </span>
+  ) : (
+    <User size={16} />
+  )}
+</button>
 
       {/* Dropdown */}
       {open && (
@@ -195,3 +195,4 @@ export function AccountMenu({ user, onAuthSuccess, onLogout }: AccountMenuProps)
     </div>
   );
 }
+

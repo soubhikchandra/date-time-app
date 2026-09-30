@@ -85,7 +85,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {open && (
           <div
             onClick={() => setOpen(false)}
-            className="fixed inset-0 z-30 bg-foreground/20 lg:hidden"
+            className="fixed inset-0 z-30 bg-foreground/20 desktop:hidden"
             aria-hidden="true"
           />
         )}
