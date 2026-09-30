@@ -25,14 +25,24 @@ export function computeCountdown(
 ): CountdownParts | null {
   if (!target) return null;
 
-  const remainingMs = Math.max(0, target.getTime() - now.getTime());
-  const totalMs = origin ? target.getTime() - origin.getTime() : remainingMs;
+  const rawRemaining = Math.max(0, target.getTime() - now.getTime());
+  const totalMs = origin ? target.getTime() - origin.getTime() : rawRemaining;
+
+  // Never show more time than the full duration (guards against a slightly
+  // stale tick right after pressing Start).
+  const remainingMs =
+    origin && totalMs > 0 ? Math.min(rawRemaining, totalMs) : rawRemaining;
+
   const expired = remainingMs === 0;
 
-  const days = Math.floor(remainingMs / DAY);
-  const hours = Math.floor((remainingMs % DAY) / HOUR);
-  const minutes = Math.floor((remainingMs % HOUR) / MIN);
-  const seconds = Math.floor((remainingMs % MIN) / SEC);
+  // Round UP to whole seconds so a 5:00 timer shows 5:00 first, then 4:59...
+  // and only shows 0:00 when the time has really run out.
+  const remainingSec = Math.ceil(remainingMs / SEC);
+
+  const days = Math.floor(remainingSec / 86400);
+  const hours = Math.floor((remainingSec % 86400) / 3600);
+  const minutes = Math.floor((remainingSec % 3600) / 60);
+  const seconds = remainingSec % 60;
 
   const progress =
     totalMs > 0
@@ -51,10 +61,7 @@ export function computeCountdown(
   };
 }
 
-export function parseDateTime(
-  dateStr: string,
-  timeStr: string
-): Date | null {
+export function parseDateTime(dateStr: string, timeStr: string): Date | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return null;
   if (!/^\d{2}:\d{2}(:\d{2})?$/.test(timeStr)) return null;
   const t = timeStr.length === 5 ? timeStr + ":00" : timeStr;
@@ -75,15 +82,47 @@ export function toTime(date: Date): string {
   return `${h}:${m}`;
 }
 
-/** Human-friendly summary like "in 3 days, 4 hours". */
+/** Human-friendly summary like "in 3d 4h". */
 export function summarize(parts: CountdownParts): string {
   if (parts.expired) return "Time's up";
   const bits: string[] = [];
   if (parts.days) bits.push(`${parts.days}d`);
   if (parts.hours) bits.push(`${parts.hours}h`);
   if (parts.minutes && !parts.days) bits.push(`${parts.minutes}m`);
-  if (parts.seconds && !parts.days && !parts.hours) bits.push(`${parts.seconds}s`);
+  if (parts.seconds && !parts.days && !parts.hours)
+    bits.push(`${parts.seconds}s`);
   return bits.length ? `in ${bits.join(" ")}` : "less than a second";
+}
+
+/* ------------------------------------------------------------------ */
+/*  Custom duration                                                    */
+/* ------------------------------------------------------------------ */
+
+export type CustomUnit = "seconds" | "minutes" | "hours" | "days";
+
+export const CUSTOM_UNITS: { value: CustomUnit; label: string; ms: number }[] =
+  [
+    { value: "seconds", label: "Seconds", ms: SEC },
+    { value: "minutes", label: "Minutes", ms: MIN },
+    { value: "hours", label: "Hours", ms: HOUR },
+    { value: "days", label: "Days", ms: DAY },
+  ];
+
+/** Upper limit for a custom timer: 10 years. */
+export const MAX_CUSTOM_MS = 3650 * DAY;
+
+/**
+ * Converts what the user typed (e.g. "2.5" + "minutes") to milliseconds.
+ * Returns null if the input is empty, not a number, <= 0, or too large.
+ */
+export function customToMs(value: string, unit: CustomUnit): number | null {
+  if (value.trim() === "") return null;
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  const unitMs = CUSTOM_UNITS.find((u) => u.value === unit)?.ms ?? SEC;
+  const ms = Math.round(n * unitMs);
+  if (ms < 1 || ms > MAX_CUSTOM_MS) return null;
+  return ms;
 }
 
 /* ------------------------------------------------------------------ */
@@ -92,21 +131,29 @@ export function summarize(parts: CountdownParts): string {
 
 export interface Preset {
   label: string;
-  /** Compute the target from "now". */
+  /**
+   * Set for "5 min", "15 min", "1 hour". The real target is computed at the
+   * moment Start is pressed, so the timer begins at exactly 5:00.
+   */
+  durationMs?: number;
+  /** Used to fill the date/time inputs. */
   target: (now: Date) => Date;
 }
 
 export const PRESETS: Preset[] = [
   {
     label: "5 min",
+    durationMs: 5 * MIN,
     target: (now) => new Date(now.getTime() + 5 * MIN),
   },
   {
     label: "15 min",
+    durationMs: 15 * MIN,
     target: (now) => new Date(now.getTime() + 15 * MIN),
   },
   {
     label: "1 hour",
+    durationMs: HOUR,
     target: (now) => new Date(now.getTime() + HOUR),
   },
   {
