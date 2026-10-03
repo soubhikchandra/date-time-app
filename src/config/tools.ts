@@ -26,6 +26,7 @@ export const TOOLS: ToolConfig[] = [
   { slug: "stopwatch",          name: "Stopwatch",                 category: "timers",   description: "Start, pause, and reset a stopwatch.",                 icon: Watch,         calculator: "stopwatch" },
   { slug: "world-clock",        name: "World Clock",               category: "timezone", description: "See current time across multiple cities.",             icon: Earth,         calculator: "world-clock" },
   { slug: "week-number",        name: "Week Number Calculator",    category: "dates",    description: "Find the ISO week number for any date.",               icon: CalendarDays,  calculator: "week-number" },
+  { slug: "calendar",           name: "Calendar & Festivals",      category: "timezone", description: "Explore public holidays and festivals by country.",    icon: CalendarDays,  calculator: "calendar" },
 ];
 
 

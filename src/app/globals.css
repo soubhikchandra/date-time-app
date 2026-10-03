@@ -623,3 +623,83 @@ input[type="week"] {
 .dark .nav-search-icon {
   color: #b6c1e6;
 }
+/* src/app/globals.css */
+
+/* ============================================================ */
+/*  DayPicker theme — matches the mini month grid              */
+/* ============================================================ */
+
+.calendar-theme {
+  --rdp-cell-size: 44px;
+  --rdp-accent-color: var(--purple);
+  --rdp-background-color: var(--surface-card);
+  --rdp-outline: 2px solid var(--purple);
+  --rdp-outline-selected: 2px solid var(--purple);
+  margin: 0;
+}
+
+.calendar-theme .rdp-head_cell {
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Base day button */
+.calendar-theme .rdp-day {
+  border-radius: 9999px;
+}
+
+.calendar-theme .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+  background-color: var(--surface-btn-secondary);
+}
+
+/* ---- Holidays — light green glow circle ---- */
+.calendar-theme .rdp-holiday-glow:not(.rdp-day_selected):not(.rdp-day_today) {
+  background-color: rgb(209 250 229);
+  color: rgb(6 95 70);
+  font-weight: 700;
+  border-radius: 9999px;
+  outline: 1.5px solid rgba(52, 211, 153, 0.75);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.55);
+}
+.dark .calendar-theme .rdp-holiday-glow:not(.rdp-day_selected):not(.rdp-day_today) {
+  background-color: rgba(16, 185, 129, 0.25);
+  color: rgb(167 243 208);
+  outline: 1.5px solid rgba(52, 211, 153, 0.6);
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.65);
+}
+
+/* ---- Today — orange circle (priority over holiday) ---- */
+.calendar-theme .rdp-day_today:not(.rdp-day_selected) {
+  background-color: rgb(251 146 60);
+  color: white;
+  font-weight: 700;
+  border-radius: 9999px;
+  outline: 2px solid rgba(253, 186, 116, 0.9);
+  box-shadow: 0 0 14px rgba(249, 115, 22, 0.7);
+}
+.dark .calendar-theme .rdp-day_today:not(.rdp-day_selected) {
+  background-color: rgb(249 115 22);
+  color: white;
+  outline: 2px solid rgba(251, 146, 60, 0.85);
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.8);
+}
+
+/* ---- Selected — purple wins over everything ---- */
+.calendar-theme .rdp-day_selected,
+.calendar-theme .rdp-day_selected:hover {
+  background-color: var(--purple) !important;
+  color: #fff !important;
+  border-radius: 9999px;
+  outline: 2px solid rgba(99, 84, 232, 0.5);
+  box-shadow: 0 0 14px rgba(99, 84, 232, 0.6);
+}
+/* Hide DayPicker navigation arrows (month navigation is controlled by the dropdown) */
+.calendar-theme .rdp-nav,
+.calendar-theme .rdp-nav_button,
+.calendar-theme .rdp-button_previous,
+.calendar-theme .rdp-button_next {
+  display: none !important;
+}

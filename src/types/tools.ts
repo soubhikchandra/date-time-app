@@ -13,7 +13,8 @@ export type CalculatorKey =
   | "countdown"
   | "stopwatch"
   | "world-clock"
-  | "week-number";
+  | "week-number"
+  | "calendar";
 
 export interface ToolConfig {
   slug: string;

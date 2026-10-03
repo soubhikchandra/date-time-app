@@ -11,6 +11,7 @@ import { WorldClock } from "./world-clock";
 import { UnixTimestamp } from "./unix-timestamp";
 import { Countdown } from "./countdown";
 import { Stopwatch } from "./stopwatch";
+import { Calendar } from "./calendar";
 
 export const CALCULATOR_REGISTRY: Partial<Record<CalculatorKey, ComponentType>> = {
   "age-calculator": AgeCalculator,
@@ -24,4 +25,5 @@ export const CALCULATOR_REGISTRY: Partial<Record<CalculatorKey, ComponentType>> 
   "unix-timestamp": UnixTimestamp,
   "countdown": Countdown,
   "stopwatch": Stopwatch,
+  "calendar": Calendar,
 };
