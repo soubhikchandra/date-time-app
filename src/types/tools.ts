@@ -9,6 +9,7 @@ export type CalculatorKey =
   | "subtract-days"
   | "business-days"
   | "timezone-converter"
+  | "timezone-difference" 
   | "unix-timestamp"
   | "countdown"
   | "stopwatch"
