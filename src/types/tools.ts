@@ -15,7 +15,9 @@ export type CalculatorKey =
   | "stopwatch"
   | "world-clock"
   | "week-number"
-  | "calendar";
+  | "calendar"
+  |"sunrise-sunset"
+  | "festival-calendar";
 
 export interface ToolConfig {
   slug: string;
