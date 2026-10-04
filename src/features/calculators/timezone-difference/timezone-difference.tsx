@@ -2,23 +2,41 @@
 // "use client";
 
 // import { useMemo, useState, useSyncExternalStore } from "react";
-// import { ArrowLeftRight, Check, Copy, Clock3, Moon, Sun } from "lucide-react";
+// import {
+//   ArrowLeftRight,
+//   Check,
+//   Copy,
+//   Clock3,
+//   Layers,
+//   Moon,
+//   Plus,
+//   Sun,
+//   Trash2,
+//   Users,
+//   X,
+// } from "lucide-react";
 // import { ToolCardHeader } from "@/components/ui/tool-card-header";
 // import { SearchableSelect } from "@/components/ui/searchable-select";
 // import { cn } from "@/lib/utils";
 // import {
 //   detectLocalZone,
-//   findCityForZone,
-//   getCityOptions,
+//   findLocationForZone,
 //   getCountryOptions,
+//   getMultiCityComparison,
 //   getStateOptions,
 //   getZoneDifference,
-//   resolveCityLabel,
+//   getZoneInfo,
+//   makeCityId,
+//   makeCityLabel,
 //   resolveTimezone,
+//   seedCities,
+//   type MultiCityEntry,
+//   type MultiCityRow,
 //   type Option,
 // } from "./logic";
 
 // const TOOL_SLUG = "timezone-difference";
+// const MAX_CITIES = 8;
 
 // /* ------------------------------------------------------------------ */
 // /*  Copy button                                                        */
@@ -60,322 +78,666 @@
 // const getServerTick = () => 0;
 
 // /* ------------------------------------------------------------------ */
-// /*  Three-level cascading selector (Country → State → City)            */
+// /*  Mode tab                                                           */
 // /* ------------------------------------------------------------------ */
 
-// function SideSelector({
-//   title,
-//   country,
-//   state,
-//   city,
-//   onCountryChange,
-//   onStateChange,
-//   onCityChange,
-//   countryOptions,
-//   stateOptions,
-//   cityOptions,
+// function ModeTab({
+//   active,
+//   onClick,
+//   children,
 // }: {
-//   title: string;
-//   country: string;
-//   state: string;
-//   city: string;
-//   onCountryChange: (v: string) => void;
-//   onStateChange: (v: string) => void;
-//   onCityChange: (v: string) => void;
-//   countryOptions: Option[];
-//   stateOptions: Option[];
-//   cityOptions: Option[];
+//   active: boolean;
+//   onClick: () => void;
+//   children: React.ReactNode;
 // }) {
 //   return (
-//     <div className="rounded-xl border border-[var(--border-card)] bg-[var(--surface-card)] p-3">
-//       <p className="mb-2 text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">
-//         {title}
-//       </p>
+//     <button
+//       type="button"
+//       onClick={onClick}
+//       className={
+//         "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition " +
+//         (active
+//           ? "bg-[var(--surface-card)] text-[var(--text-primary)] shadow-sm"
+//           : "text-muted-foreground hover:text-[var(--text-primary)]")
+//       }
+//     >
+//       {children}
+//     </button>
+//   );
+// }
 
-//       <div className="grid gap-2 sm:grid-cols-3">
-//         <SearchableSelect
-//           value={country}
-//           onChange={onCountryChange}
-//           options={countryOptions}
-//           placeholder="Country..."
-//         />
-//         <SearchableSelect
-//           value={state}
-//           onChange={onStateChange}
-//           options={stateOptions}
-//           placeholder={stateOptions.length === 0 ? "No states" : "State..."}
-//           disabled={stateOptions.length === 0}
-//         />
-//         <SearchableSelect
-//           value={city}
-//           onChange={onCityChange}
-//           options={cityOptions}
-//           placeholder={cityOptions.length === 0 ? "No cities" : "City..."}
-//           disabled={cityOptions.length === 0}
-//         />
-//       </div>
+// /* ------------------------------------------------------------------ */
+// /*  Country + State selector (reused by two + multi modes)             */
+// /* ------------------------------------------------------------------ */
+
+// function LocationPicker({
+//   country,
+//   state,
+//   onCountryChange,
+//   onStateChange,
+//   countryOptions,
+//   stateOptions,
+//   compact = false,
+// }: {
+//   country: string;
+//   state: string;
+//   onCountryChange: (v: string) => void;
+//   onStateChange: (v: string) => void;
+//   countryOptions: Option[];
+//   stateOptions: Option[];
+//   compact?: boolean;
+// }) {
+//   return (
+//     <div className={cn("grid gap-2", compact ? "sm:grid-cols-2" : "sm:grid-cols-2")}>
+//       <SearchableSelect
+//         value={country}
+//         onChange={onCountryChange}
+//         options={countryOptions}
+//         placeholder="Country..."
+//       />
+//       <SearchableSelect
+//         value={state}
+//         onChange={onStateChange}
+//         options={stateOptions}
+//         placeholder={stateOptions.length === 0 ? "No states" : "State..."}
+//         disabled={stateOptions.length === 0}
+//       />
 //     </div>
 //   );
 // }
 
 // /* ------------------------------------------------------------------ */
-// /*  Main Component                                                     */
+// /*  Multi-city row                                                     */
+// /* ------------------------------------------------------------------ */
+
+// function CityRow({
+//   row,
+//   onRemove,
+// }: {
+//   row: MultiCityRow;
+//   onRemove: () => void;
+// }) {
+//   const isAhead = row.diffMinutes > 0;
+//   const isBehind = row.diffMinutes < 0;
+
+//   return (
+//     <li className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-[var(--border-card)] bg-[var(--surface-card)] px-3 py-3 sm:px-4">
+//       {/* Day/night icon */}
+//       <span
+//         className={cn(
+//           "grid size-9 shrink-0 place-items-center rounded-xl",
+//           row.info.isDaytime
+//             ? "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400"
+//             : "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400"
+//         )}
+//       >
+//         {row.info.isDaytime ? <Sun size={15} /> : <Moon size={15} />}
+//       </span>
+
+//       {/* Label */}
+//       <div className="min-w-0 flex-1">
+//         <p className="truncate text-[13px] font-bold text-[var(--text-primary)]">
+//           {row.label}
+//         </p>
+//         <p className="truncate font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+//           {row.info.abbreviation} · {row.info.offsetLabel}
+//         </p>
+//       </div>
+
+//       {/* Time + diff */}
+//       <div className="flex shrink-0 items-center gap-3">
+//         <div className="text-right">
+//           <p className="font-mono text-[clamp(14px,3.5vw,16px)] font-bold text-[var(--text-primary)]">
+//             {row.info.currentTime}
+//           </p>
+//           <div className="mt-0.5 flex items-center justify-end gap-1.5">
+//             {row.isSameAsReference ? (
+//               <span className="text-[10px] font-bold text-muted-foreground">
+//                 Same as reference
+//               </span>
+//             ) : (
+//               <>
+//                 <span
+//                   className={cn(
+//                     "font-mono text-[11px] font-bold",
+//                     isAhead
+//                       ? "text-emerald-600 dark:text-emerald-400"
+//                       : isBehind
+//                         ? "text-orange-600 dark:text-orange-400"
+//                         : "text-muted-foreground"
+//                   )}
+//                 >
+//                   {row.diffLabel}
+//                 </span>
+//                 {row.dayShift !== 0 && (
+//                   <span className="rounded-full bg-[var(--surface-btn-secondary)] px-1.5 py-0.5 text-[9px] font-bold text-muted-foreground">
+//                     {row.dayShift > 0 ? "+" : "−"}
+//                     {Math.abs(row.dayShift)}d
+//                   </span>
+//                 )}
+//               </>
+//             )}
+//           </div>
+//         </div>
+
+//         <button
+//           type="button"
+//           onClick={onRemove}
+//           aria-label={`Remove ${row.label}`}
+//           className="grid size-8 shrink-0 place-items-center rounded-lg text-muted-foreground transition hover:bg-[var(--surface-btn-secondary)] hover:text-rose-500"
+//         >
+//           <Trash2 size={13} />
+//         </button>
+//       </div>
+//     </li>
+//   );
+// }
+
+// /* ------------------------------------------------------------------ */
+// /*  Main                                                               */
 // /* ------------------------------------------------------------------ */
 
 // export function TimezoneDifference() {
 //   const countryOptions = useMemo(() => getCountryOptions(), []);
+//   const localZone = useMemo(() => detectLocalZone(), []);
 
-//   /* Auto-detect local zone and resolve to country/state/city */
-//   const initialFrom = useMemo(() => {
-//     const zone = detectLocalZone();
-//     const hit = findCityForZone(zone);
-//     if (!hit) return { country: "US", state: "", city: "" };
-//     return {
-//       country: hit.countryIso2,
-//       state: hit.province,
-//       city: hit.cityKey,
-//     };
-//   }, []);
+//   const initial = useMemo(() => {
+//     const hit = findLocationForZone(localZone);
+//     if (!hit) return { country: "US", state: "" };
+//     return { country: hit.countryIso2, state: hit.state };
+//   }, [localZone]);
 
-//   /* FROM side state */
-//   const [fromCountry, setFromCountry] = useState(initialFrom.country);
-//   const [fromState, setFromState] = useState(initialFrom.state);
-//   const [fromCity, setFromCity] = useState(initialFrom.city);
+//   const [mode, setMode] = useState<"two" | "multi">("two");
 
-//   /* TO side state */
+//   /* -------- Two-city mode state -------- */
+//   const [fromCountry, setFromCountry] = useState(initial.country);
+//   const [fromState, setFromState] = useState(initial.state);
 //   const [toCountry, setToCountry] = useState("JP");
 //   const [toState, setToState] = useState("Tokyo");
-//   const [toCity, setToCity] = useState("JP|Tokyo|Tokyo");
 
-//   /* Derived option lists */
-//   const fromStateOptions = useMemo(
-//     () => getStateOptions(fromCountry),
-//     [fromCountry]
+//   /* -------- Multi-city mode state -------- */
+//   const [refCountry, setRefCountry] = useState(initial.country);
+//   const [refState, setRefState] = useState(initial.state);
+//   const [cities, setCities] = useState<MultiCityEntry[]>(() =>
+//     seedCities(localZone)
 //   );
-//   const fromCityOptions = useMemo(
-//     () => (fromState ? getCityOptions(fromCountry, fromState) : []),
-//     [fromCountry, fromState]
-//   );
+//   const [adding, setAdding] = useState(false);
+//   const [newCountry, setNewCountry] = useState("JP");
+//   const [newState, setNewState] = useState(() => {
+//     const s = getStateOptions("JP");
+//     return s[0]?.value ?? "";
+//   });
 
-//   const toStateOptions = useMemo(
-//     () => getStateOptions(toCountry),
-//     [toCountry]
-//   );
-//   const toCityOptions = useMemo(
-//     () => (toState ? getCityOptions(toCountry, toState) : []),
-//     [toCountry, toState]
-//   );
-
-//   /* Live tick */
+//   /* -------- Live tick -------- */
 //   const tick = useSyncExternalStore(subscribeTick, getTick, getServerTick);
 //   const now = useMemo(
 //     () => (tick === 0 ? null : new Date(tick * TICK_MS)),
 //     [tick]
 //   );
 
-//   /* Resolve to IANA zones */
-//   const fromZone = fromCity ? resolveTimezone(fromCity) : null;
-//   const toZone = toCity ? resolveTimezone(toCity) : null;
-
+//   /* -------- Two-city computed -------- */
+//   const fromStateOptions = useMemo(
+//     () => getStateOptions(fromCountry),
+//     [fromCountry]
+//   );
+//   const toStateOptions = useMemo(
+//     () => getStateOptions(toCountry),
+//     [toCountry]
+//   );
+//   const fromZone = fromState ? resolveTimezone(fromCountry, fromState) : null;
+//   const toZone = toState ? resolveTimezone(toCountry, toState) : null;
 //   const diff = useMemo(() => {
 //     if (!now || !fromZone || !toZone) return null;
 //     return getZoneDifference(fromZone, toZone, now);
 //   }, [fromZone, toZone, now]);
 
-//   /* Handlers that cascade-clear downstream dropdowns */
+//   /* -------- Multi-city computed -------- */
+//   const refStateOptions = useMemo(
+//     () => getStateOptions(refCountry),
+//     [refCountry]
+//   );
+//   const newStateOptions = useMemo(
+//     () => getStateOptions(newCountry),
+//     [newCountry]
+//   );
+//   const refZone = refState ? resolveTimezone(refCountry, refState) : null;
+//   const refInfo = useMemo(() => {
+//     if (!now || !refZone) return null;
+//     return getZoneInfo(refZone, now);
+//   }, [now, refZone]);
+
+//   const multiRows = useMemo(() => {
+//     if (!now || !refZone) return [];
+//     return getMultiCityComparison(refZone, cities, now);
+//   }, [now, refZone, cities]);
+
+//   const canAddCity = useMemo(() => {
+//     if (!newState) return false;
+//     if (cities.length >= MAX_CITIES) return false;
+//     const zone = resolveTimezone(newCountry, newState);
+//     if (!zone) return false;
+//     if (refZone && zone === refZone) return false;
+//     if (cities.some((c) => c.zone === zone)) return false;
+//     return true;
+//   }, [newCountry, newState, refZone, cities]);
+
+//   /* -------- Two-city handlers -------- */
 //   const handleFromCountry = (v: string) => {
 //     setFromCountry(v);
 //     const states = getStateOptions(v);
-//     const nextState = states[0]?.value ?? "";
-//     setFromState(nextState);
-//     const cities = nextState ? getCityOptions(v, nextState) : [];
-//     setFromCity(cities[0]?.value ?? "");
+//     setFromState(states[0]?.value ?? "");
 //   };
-
-//   const handleFromState = (v: string) => {
-//     setFromState(v);
-//     const cities = getCityOptions(fromCountry, v);
-//     setFromCity(cities[0]?.value ?? "");
-//   };
-
 //   const handleToCountry = (v: string) => {
 //     setToCountry(v);
 //     const states = getStateOptions(v);
-//     const nextState = states[0]?.value ?? "";
-//     setToState(nextState);
-//     const cities = nextState ? getCityOptions(v, nextState) : [];
-//     setToCity(cities[0]?.value ?? "");
+//     setToState(states[0]?.value ?? "");
 //   };
-
-//   const handleToState = (v: string) => {
-//     setToState(v);
-//     const cities = getCityOptions(toCountry, v);
-//     setToCity(cities[0]?.value ?? "");
-//   };
-
 //   const swap = () => {
 //     setFromCountry(toCountry);
 //     setFromState(toState);
-//     setFromCity(toCity);
 //     setToCountry(fromCountry);
 //     setToState(fromState);
-//     setToCity(fromCity);
 //   };
 
-//   /* Friendly display labels for the two selected cities */
-//   const fromLabel = fromCity ? resolveCityLabel(fromCity) : "";
-//   const toLabel = toCity ? resolveCityLabel(toCity) : "";
+//   /* -------- Multi-city handlers -------- */
+//   const handleRefCountry = (v: string) => {
+//     setRefCountry(v);
+//     const states = getStateOptions(v);
+//     setRefState(states[0]?.value ?? "");
+//   };
+
+//   const handleNewCountry = (v: string) => {
+//     setNewCountry(v);
+//     const states = getStateOptions(v);
+//     setNewState(states[0]?.value ?? "");
+//   };
+
+//   const handleAddCity = () => {
+//     if (!canAddCity) return;
+//     const zone = resolveTimezone(newCountry, newState);
+//     if (!zone) return;
+//     setCities((prev) => [
+//       ...prev,
+//       {
+//         id: makeCityId(),
+//         countryIso2: newCountry,
+//         state: newState,
+//         zone,
+//       },
+//     ]);
+//     setAdding(false);
+//   };
+
+//   const handleRemoveCity = (id: string) => {
+//     setCities((prev) => prev.filter((c) => c.id !== id));
+//   };
+
+//   /* -------- Copy text for multi-mode -------- */
+//   const multiCopyText = useMemo(() => {
+//     if (!refInfo || !refZone) return "";
+//     const refLabel = makeCityLabel(refCountry, refState);
+//     const lines: string[] = [];
+//     lines.push(
+//       `Reference: ${refLabel} — ${refInfo.currentTime} ${refInfo.abbreviation}`
+//     );
+//     multiRows.forEach((r) => {
+//       const suffix = r.isSameAsReference
+//         ? "same as reference"
+//         : `${r.diffLabel}${
+//             r.dayShift !== 0
+//               ? `, ${r.dayShift > 0 ? "+" : "−"}${Math.abs(r.dayShift)}d`
+//               : ""
+//           }`;
+//       lines.push(
+//         `${r.label} — ${r.info.currentTime} ${r.info.abbreviation} (${suffix})`
+//       );
+//     });
+//     return lines.join("\n");
+//   }, [refInfo, refZone, refCountry, refState, multiRows]);
 
 //   return (
 //     <div className="space-y-4">
 //       <section className="tool-card rounded-3xl border border-[var(--border-card)] bg-[var(--surface-card)] p-5 sm:p-7">
 //         <ToolCardHeader slug={TOOL_SLUG} />
 
-//         {/* Two side selectors + swap button */}
-//         <div className="mt-5 grid items-center gap-3 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-//           <SideSelector
-//             title="From"
-//             country={fromCountry}
-//             state={fromState}
-//             city={fromCity}
-//             onCountryChange={handleFromCountry}
-//             onStateChange={handleFromState}
-//             onCityChange={setFromCity}
-//             countryOptions={countryOptions}
-//             stateOptions={fromStateOptions}
-//             cityOptions={fromCityOptions}
-//           />
-
-//           <button
-//             type="button"
-//             onClick={swap}
-//             aria-label="Swap zones"
-//             className="mx-auto grid size-10 shrink-0 place-items-center rounded-xl border border-[var(--border-input)] bg-[var(--surface-input)] text-muted-foreground transition hover:bg-[var(--surface-btn-secondary)] hover:text-[var(--text-primary)]"
-//           >
-//             <ArrowLeftRight size={15} />
-//           </button>
-
-//           <SideSelector
-//             title="To"
-//             country={toCountry}
-//             state={toState}
-//             city={toCity}
-//             onCountryChange={handleToCountry}
-//             onStateChange={handleToState}
-//             onCityChange={setToCity}
-//             countryOptions={countryOptions}
-//             stateOptions={toStateOptions}
-//             cityOptions={toCityOptions}
-//           />
+//         {/* Mode toggle */}
+//         <div className="mt-5 inline-flex rounded-xl bg-[var(--surface-btn-secondary)] p-1">
+//           <ModeTab active={mode === "two"} onClick={() => setMode("two")}>
+//             <ArrowLeftRight size={13} />
+//             Two cities
+//           </ModeTab>
+//           <ModeTab active={mode === "multi"} onClick={() => setMode("multi")}>
+//             <Layers size={13} />
+//             Multi-city
+//           </ModeTab>
 //         </div>
 
-//         {/* Main content */}
-//         <div className="mt-6 flex flex-col gap-6">
-//           {diff ? (
-//             <div className="space-y-4">
-//               {/* Big diff header */}
-//               <div className="rounded-2xl border border-[var(--border-card)] bg-[var(--surface-card)] p-6 text-center">
-//                 <p className="text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">
-//                   Time Difference
+//         {/* ============================================================ */}
+//         {/* TWO-CITY MODE                                                */}
+//         {/* ============================================================ */}
+//         {mode === "two" && (
+//           <>
+//             <div className="mt-5 grid items-center gap-3 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+//               <div className="rounded-xl border border-[var(--border-card)] bg-[var(--surface-card)] p-3">
+//                 <p className="mb-2 text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">
+//                   From
 //                 </p>
-//                 <p className="mt-2 font-mono text-[clamp(40px,9vw,64px)] font-bold leading-none tracking-[-.04em] text-[var(--purple)]">
-//                   {diff.diffLabel}
-//                 </p>
-//                 <p className="mt-3 text-[14px] font-medium text-[var(--text-primary)]">
-//                   {diff.diffText}
-//                 </p>
+//                 <LocationPicker
+//                   country={fromCountry}
+//                   state={fromState}
+//                   onCountryChange={handleFromCountry}
+//                   onStateChange={setFromState}
+//                   countryOptions={countryOptions}
+//                   stateOptions={fromStateOptions}
+//                 />
 //               </div>
 
-//               {/* Side-by-side clocks */}
-//               <div className="grid gap-3 sm:grid-cols-2">
-//                 {[diff.from, diff.to].map((zone, idx) => (
-//                   <div
-//                     key={`${zone.zone}-${idx}`}
-//                     className="rounded-xl border border-[var(--border-card)] bg-[var(--surface-card)] p-4"
-//                   >
-//                     <div className="flex items-start justify-between gap-3">
-//                       <div className="min-w-0">
-//                         <p className="truncate text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-//                           {zone.abbreviation} · {zone.offsetLabel}
-//                         </p>
-//                         <p className="mt-0.5 truncate text-[13px] font-semibold text-[var(--text-primary)]">
-//                           {idx === 0 ? fromLabel : toLabel}
-//                         </p>
-//                       </div>
-//                       <span
-//                         className={cn(
-//                           "grid size-8 shrink-0 place-items-center rounded-lg",
-//                           zone.isDaytime
-//                             ? "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400"
-//                             : "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400"
-//                         )}
-//                       >
-//                         {zone.isDaytime ? <Sun size={14} /> : <Moon size={14} />}
-//                       </span>
-//                     </div>
+//               <button
+//                 type="button"
+//                 onClick={swap}
+//                 aria-label="Swap zones"
+//                 className="mx-auto grid size-10 shrink-0 place-items-center rounded-xl border border-[var(--border-input)] bg-[var(--surface-input)] text-muted-foreground transition hover:bg-[var(--surface-btn-secondary)] hover:text-[var(--text-primary)]"
+//               >
+//                 <ArrowLeftRight size={15} />
+//               </button>
 
-//                     <p className="mt-3 font-mono text-[clamp(24px,5vw,32px)] font-bold leading-none tracking-[-.03em] text-[var(--text-primary)]">
-//                       {zone.currentTime}
+//               <div className="rounded-xl border border-[var(--border-card)] bg-[var(--surface-card)] p-3">
+//                 <p className="mb-2 text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">
+//                   To
+//                 </p>
+//                 <LocationPicker
+//                   country={toCountry}
+//                   state={toState}
+//                   onCountryChange={handleToCountry}
+//                   onStateChange={setToState}
+//                   countryOptions={countryOptions}
+//                   stateOptions={toStateOptions}
+//                 />
+//               </div>
+//             </div>
+
+//             <div className="mt-6 flex flex-col gap-6">
+//               {diff ? (
+//                 <div className="space-y-4">
+//                   <div className="rounded-2xl border border-[var(--border-card)] bg-[var(--surface-card)] p-6 text-center">
+//                     <p className="text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">
+//                       Time Difference
 //                     </p>
-//                     <p className="mt-1 text-[12px] text-muted-foreground">
-//                       {zone.currentDate}
+//                     <p className="mt-2 font-mono text-[clamp(40px,9vw,64px)] font-bold leading-none tracking-[-.04em] text-[var(--purple)]">
+//                       {diff.diffLabel}
+//                     </p>
+//                     <p className="mt-3 text-[14px] font-medium text-[var(--text-primary)]">
+//                       {diff.diffText}
 //                     </p>
 //                   </div>
-//                 ))}
+
+//                   <div className="grid gap-3 sm:grid-cols-2">
+//                     {[diff.from, diff.to].map((zone, idx) => (
+//                       <div
+//                         key={`${zone.zone}-${idx}`}
+//                         className="rounded-xl border border-[var(--border-card)] bg-[var(--surface-card)] p-4"
+//                       >
+//                         <div className="flex items-start justify-between gap-3">
+//                           <div className="min-w-0">
+//                             <p className="truncate text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+//                               {zone.abbreviation} · {zone.offsetLabel}
+//                             </p>
+//                             <p className="mt-0.5 truncate text-[13px] font-semibold text-[var(--text-primary)]">
+//                               {idx === 0 ? fromState : toState}
+//                             </p>
+//                           </div>
+//                           <span
+//                             className={cn(
+//                               "grid size-8 shrink-0 place-items-center rounded-lg",
+//                               zone.isDaytime
+//                                 ? "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400"
+//                                 : "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400"
+//                             )}
+//                           >
+//                             {zone.isDaytime ? (
+//                               <Sun size={14} />
+//                             ) : (
+//                               <Moon size={14} />
+//                             )}
+//                           </span>
+//                         </div>
+
+//                         <p className="mt-3 font-mono text-[clamp(24px,5vw,32px)] font-bold leading-none tracking-[-.03em] text-[var(--text-primary)]">
+//                           {zone.currentTime}
+//                         </p>
+//                         <p className="mt-1 text-[12px] text-muted-foreground">
+//                           {zone.currentDate}
+//                         </p>
+//                       </div>
+//                     ))}
+//                   </div>
+//                 </div>
+//               ) : (
+//                 <div className="rounded-2xl border border-dashed border-[var(--border-card)] p-6 text-center">
+//                   <p className="text-[13px] text-muted-foreground">
+//                     Pick a country and state on both sides to see the
+//                     difference.
+//                   </p>
+//                 </div>
+//               )}
+
+//               {diff && (
+//                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--border-card)] bg-[var(--surface-btn-secondary)] px-4 py-3">
+//                   <span className="inline-flex items-center gap-2 text-[12px] text-muted-foreground">
+//                     <Clock3 size={13} />
+//                     Live · updated every second
+//                   </span>
+//                   <CopyButton
+//                     value={`${fromState} is ${diff.diffLabel} relative to ${toState}`}
+//                   />
+//                 </div>
+//               )}
+//             </div>
+//           </>
+//         )}
+
+//         {/* ============================================================ */}
+//         {/* MULTI-CITY MODE                                              */}
+//         {/* ============================================================ */}
+//         {mode === "multi" && (
+//           <div className="mt-5 flex flex-col gap-4">
+//             {/* Reference picker */}
+//             <div className="rounded-2xl border border-[var(--border-card)] bg-[var(--surface-card)] p-4">
+//               <p className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.18em] text-purple-600 dark:text-purple-400">
+//                 <Users size={12} />
+//                 Reference
+//               </p>
+
+//               <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+//                 <LocationPicker
+//                   country={refCountry}
+//                   state={refState}
+//                   onCountryChange={handleRefCountry}
+//                   onStateChange={setRefState}
+//                   countryOptions={countryOptions}
+//                   stateOptions={refStateOptions}
+//                   compact
+//                 />
+
+//                 {refInfo && refZone && (
+//                   <div className="text-left sm:text-right">
+//                     <p className="font-mono text-[clamp(28px,6vw,36px)] font-bold leading-none tracking-[-.03em] text-[var(--text-primary)]">
+//                       {refInfo.currentTime}
+//                     </p>
+//                     <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+//                       {makeCityLabel(refCountry, refState)} ·{" "}
+//                       {refInfo.abbreviation}
+//                     </p>
+//                   </div>
+//                 )}
 //               </div>
 //             </div>
-//           ) : (
-//             <div className="rounded-2xl border border-dashed border-[var(--border-card)] p-6 text-center">
-//               <p className="text-[13px] text-muted-foreground">
-//                 Pick a country, state, and city on both sides to see the difference.
-//               </p>
-//             </div>
-//           )}
 
-//           {/* Footer */}
-//           {diff && (
-//             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--border-card)] bg-[var(--surface-btn-secondary)] px-4 py-3">
-//               <span className="inline-flex items-center gap-2 text-[12px] text-muted-foreground">
-//                 <Clock3 size={13} />
-//                 Live · updated every second
-//               </span>
-//               <CopyButton
-//                 value={`${fromLabel} is ${diff.diffLabel} relative to ${toLabel}`}
-//               />
+//             {/* Cities header */}
+//             <div className="flex flex-wrap items-center justify-between gap-3">
+//               <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">
+//                 <Layers size={12} />
+//                 Compared cities ({cities.length}/{MAX_CITIES})
+//               </p>
+
+//               <div className="flex flex-wrap gap-2">
+//                 <button
+//                   type="button"
+//                   onClick={() => setAdding((v) => !v)}
+//                   disabled={cities.length >= MAX_CITIES && !adding}
+//                   className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-card)] bg-[var(--surface-card)] px-3 py-1.5 text-[12px] font-bold text-[var(--text-primary)] transition hover:bg-[var(--surface-btn-secondary)] disabled:opacity-40"
+//                 >
+//                   {adding ? <X size={12} /> : <Plus size={12} />}
+//                   {adding ? "Cancel" : "Add city"}
+//                 </button>
+//                 {multiRows.length > 0 && (
+//                   <CopyButton value={multiCopyText} />
+//                 )}
+//               </div>
 //             </div>
-//           )}
-//         </div>
+
+//             {/* Add-city form */}
+//             {adding && (
+//               <div className="rounded-xl border border-purple-400/40 bg-purple-50/50 p-3 dark:border-purple-500/30 dark:bg-purple-500/5">
+//                 <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+//                   Add a city
+//                 </p>
+//                 <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+//                   <SearchableSelect
+//                     value={newCountry}
+//                     onChange={handleNewCountry}
+//                     options={countryOptions}
+//                     placeholder="Country..."
+//                   />
+//                   <SearchableSelect
+//                     value={newState}
+//                     onChange={setNewState}
+//                     options={newStateOptions}
+//                     placeholder={
+//                       newStateOptions.length === 0 ? "No states" : "State..."
+//                     }
+//                     disabled={newStateOptions.length === 0}
+//                   />
+//                   <button
+//                     type="button"
+//                     onClick={handleAddCity}
+//                     disabled={!canAddCity}
+//                     className="h-[42px] rounded-[10px] bg-purple-600 px-4 text-[13px] font-bold text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-40"
+//                   >
+//                     Add
+//                   </button>
+//                 </div>
+//                 {newState && !canAddCity && (
+//                   <p className="mt-2 text-[11px] text-muted-foreground">
+//                     {cities.length >= MAX_CITIES
+//                       ? `Maximum ${MAX_CITIES} cities. Remove one to add more.`
+//                       : "This location is already in the list."}
+//                   </p>
+//                 )}
+//               </div>
+//             )}
+
+//             {/* City list */}
+//             {cities.length === 0 ? (
+//               <div className="rounded-2xl border border-dashed border-[var(--border-card)] p-8 text-center">
+//                 <p className="text-[13px] text-muted-foreground">
+//                   No cities yet. Click{" "}
+//                   <span className="font-bold text-[var(--text-primary)]">
+//                     Add city
+//                   </span>{" "}
+//                   to start comparing time zones.
+//                 </p>
+//               </div>
+//             ) : (
+//               <ul className="space-y-2">
+//                 {multiRows.map((row) => (
+//                   <CityRow
+//                     key={row.id}
+//                     row={row}
+//                     onRemove={() => handleRemoveCity(row.id)}
+//                   />
+//                 ))}
+//               </ul>
+//             )}
+
+//             {/* Footer note */}
+//             {cities.length > 0 && (
+//               <p className="text-[11px] text-muted-foreground">
+//                 All times are live and update every second. Day shift badges
+//                 (+1d / −1d) indicate that a city is on a different calendar day
+//                 than the reference.
+//               </p>
+//             )}
+//           </div>
+//         )}
 //       </section>
 //     </div>
 //   );
 // }
 
-
+// -------------------------------------------------------------------
 // src/features/calculators/timezone-difference/timezone-difference.tsx
 "use client";
 
 import { useMemo, useState, useSyncExternalStore } from "react";
-import { ArrowLeftRight, Check, Copy, Clock3, Moon, Sun } from "lucide-react";
+import {
+  ArrowLeftRight,
+  ArrowUpDown,
+  BarChart3,
+  Check,
+  Copy,
+  Clock3,
+  Download,
+  FileSpreadsheet,
+  Layers,
+  Moon,
+  Phone,
+  Plus,
+  Sun,
+  Trash2,
+  X,
+} from "lucide-react";
 import { ToolCardHeader } from "@/components/ui/tool-card-header";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { cn } from "@/lib/utils";
 import {
+  buildMultiCityIcs,
   detectLocalZone,
   findLocationForZone,
+  formatHourRanges,
+  getBestCallWindow,
   getCountryOptions,
+  getHeatmap,
+  getMultiCityComparison,
   getStateOptions,
   getZoneDifference,
+  getZoneInfo,
+  makeCityId,
+  makeCityLabel,
   resolveTimezone,
+  seedCities,
+  sortRows,
+  toMultiCityCsv,
+  type MultiCityEntry,
+  type MultiCityRow,
   type Option,
+  type SortMode,
 } from "./logic";
 
 const TOOL_SLUG = "timezone-difference";
+const MAX_CITIES = 8;
 
 /* ------------------------------------------------------------------ */
 /*  Copy button                                                        */
 /* ------------------------------------------------------------------ */
 
-function CopyButton({ value }: { value: string }) {
+function CopyButton({
+  value,
+  label = "Copy",
+}: {
+  value: string;
+  label?: string;
+}) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     try {
@@ -389,11 +751,47 @@ function CopyButton({ value }: { value: string }) {
   return (
     <button
       type="button"
+      className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-card)] bg-[var(--surface-card)] px-2.5 py-1.5 text-[11px] font-bold text-[var(--text-primary)] transition hover:bg-[var(--surface-btn-secondary)]"
       onClick={copy}
-      className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--purple)] transition hover:opacity-80"
     >
-      {copied ? <Check size={13} /> : <Copy size={13} />}
-      {copied ? "Copied" : "Copy"}
+      {copied ? <Check size={12} /> : <Copy size={12} />}
+      {copied ? "Copied" : label}
+    </button>
+  );
+}
+
+function FileButton({
+  content,
+  filename,
+  mimeType,
+  label,
+  icon,
+}: {
+  content: string;
+  filename: string;
+  mimeType: string;
+  label: string;
+  icon: React.ReactNode;
+}) {
+  const download = () => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+  return (
+    <button
+      type="button"
+      onClick={download}
+      className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-card)] bg-[var(--surface-card)] px-2.5 py-1.5 text-[11px] font-bold text-[var(--text-primary)] transition hover:bg-[var(--surface-btn-secondary)]"
+    >
+      {icon}
+      {label}
     </button>
   );
 }
@@ -411,11 +809,39 @@ const getTick = () => Math.floor(Date.now() / TICK_MS);
 const getServerTick = () => 0;
 
 /* ------------------------------------------------------------------ */
-/*  Two-level selector (Country → State)                               */
+/*  Mode tab                                                           */
 /* ------------------------------------------------------------------ */
 
-function SideSelector({
-  title,
+function ModeTab({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition " +
+        (active
+          ? "bg-[var(--surface-card)] text-[var(--text-primary)] shadow-sm"
+          : "text-muted-foreground hover:text-[var(--text-primary)]")
+      }
+    >
+      {children}
+    </button>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Location picker                                                    */
+/* ------------------------------------------------------------------ */
+
+function LocationPicker({
   country,
   state,
   onCountryChange,
@@ -423,7 +849,6 @@ function SideSelector({
   countryOptions,
   stateOptions,
 }: {
-  title: string;
   country: string;
   state: string;
   onCountryChange: (v: string) => void;
@@ -432,89 +857,378 @@ function SideSelector({
   stateOptions: Option[];
 }) {
   return (
-    <div className="rounded-xl border border-[var(--border-card)] bg-[var(--surface-card)] p-3">
-      <p className="mb-2 text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">
-        {title}
-      </p>
+    <div className="grid gap-2 sm:grid-cols-2">
+      <SearchableSelect
+        value={country}
+        onChange={onCountryChange}
+        options={countryOptions}
+        placeholder="Country..."
+      />
+      <SearchableSelect
+        value={state}
+        onChange={onStateChange}
+        options={stateOptions}
+        placeholder={stateOptions.length === 0 ? "No states" : "State..."}
+        disabled={stateOptions.length === 0}
+      />
+    </div>
+  );
+}
 
-      <div className="grid gap-2 sm:grid-cols-2">
-        <SearchableSelect
-          value={country}
-          onChange={onCountryChange}
-          options={countryOptions}
-          placeholder="Country..."
-        />
-        <SearchableSelect
-          value={state}
-          onChange={onStateChange}
-          options={stateOptions}
-          placeholder={stateOptions.length === 0 ? "No states" : "State / Province..."}
-          disabled={stateOptions.length === 0}
-        />
+/* ------------------------------------------------------------------ */
+/*  City row (with business-hours badge)                               */
+/* ------------------------------------------------------------------ */
+
+function CityRow({
+  row,
+  onRemove,
+}: {
+  row: MultiCityRow;
+  onRemove: () => void;
+}) {
+  const isAhead = row.diffMinutes > 0;
+  const isBehind = row.diffMinutes < 0;
+
+  return (
+    <li
+      className={cn(
+        "flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border px-3 py-3 transition sm:px-4",
+        row.inBusinessHours
+          ? "border-emerald-400/50 bg-emerald-50/40 dark:border-emerald-500/30 dark:bg-emerald-500/5"
+          : "border-[var(--border-card)] bg-[var(--surface-card)]",
+      )}
+    >
+      {/* Day/night icon */}
+      <span
+        className={cn(
+          "grid size-9 shrink-0 place-items-center rounded-xl",
+          row.info.isDaytime
+            ? "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400"
+            : "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400",
+        )}
+      >
+        {row.info.isDaytime ? <Sun size={15} /> : <Moon size={15} />}
+      </span>
+
+      {/* Label */}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[13px] font-bold text-[var(--text-primary)]">
+          {row.label}
+        </p>
+        <p className="truncate font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+          {row.info.abbreviation} · {row.info.offsetLabel}
+        </p>
+      </div>
+
+      {/* Business hours badge */}
+      <span
+        className={cn(
+          "hidden shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold sm:inline-flex",
+          row.inBusinessHours
+            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+            : row.inAwakeHours
+              ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300"
+              : "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300",
+        )}
+        title={
+          row.inBusinessHours
+            ? "In business hours (9 AM – 6 PM)"
+            : row.inAwakeHours
+              ? "Awake hours (6 AM – 10 PM)"
+              : "Sleep hours"
+        }
+      >
+        {row.inBusinessHours
+          ? "☎ Call now"
+          : row.inAwakeHours
+            ? "Awake"
+            : "Asleep"}
+      </span>
+
+      {/* Time + diff */}
+      <div className="flex shrink-0 items-center gap-3">
+        <div className="text-right">
+          <p className="font-mono text-[clamp(14px,3.5vw,16px)] font-bold text-[var(--text-primary)]">
+            {row.info.currentTime}
+          </p>
+          <div className="mt-0.5 flex items-center justify-end gap-1.5">
+            {row.isSameAsReference ? (
+              <span className="text-[10px] font-bold text-muted-foreground">
+                Same as reference
+              </span>
+            ) : (
+              <>
+                <span
+                  className={cn(
+                    "font-mono text-[11px] font-bold",
+                    isAhead
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : isBehind
+                        ? "text-orange-600 dark:text-orange-400"
+                        : "text-muted-foreground",
+                  )}
+                >
+                  {row.diffLabel}
+                </span>
+                {row.dayShift !== 0 && (
+                  <span className="rounded-full bg-[var(--surface-btn-secondary)] px-1.5 py-0.5 text-[9px] font-bold text-muted-foreground">
+                    {row.dayShift > 0 ? "+" : "−"}
+                    {Math.abs(row.dayShift)}d
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label={`Remove ${row.label}`}
+          className="grid size-8 shrink-0 place-items-center rounded-lg text-muted-foreground transition hover:bg-[var(--surface-btn-secondary)] hover:text-rose-500"
+        >
+          <Trash2 size={13} />
+        </button>
+      </div>
+    </li>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Heatmap                                                            */
+/* ------------------------------------------------------------------ */
+
+function HeatmapView({
+  heatmap,
+  referenceLabel,
+}: {
+  heatmap: ReturnType<typeof getHeatmap>;
+  referenceLabel: string;
+}) {
+  return (
+    <div className="rounded-xl border border-[var(--border-card)] bg-[var(--surface-card)] p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">
+          <BarChart3 size={12} />
+          24-hour heatmap · {referenceLabel} time
+        </p>
+        <div className="flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 rounded-sm bg-emerald-500" />
+            Business (9–18)
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 rounded-sm bg-amber-400/70" />
+            Awake (6–22)
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 rounded-sm bg-slate-300 dark:bg-slate-700" />
+            Sleep
+          </span>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <div className="min-w-[640px]">
+          {/* Hour header */}
+          <div className="flex items-center">
+            <div className="w-32 shrink-0" />
+            <div className="flex flex-1 gap-0.5">
+              {heatmap.hours.map((h) => (
+                <div
+                  key={h}
+                  className={cn(
+                    "flex-1 text-center text-[9px] font-bold",
+                    h === heatmap.currentHour
+                      ? "text-[var(--purple)]"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  {String(h).padStart(2, "0")}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Rows */}
+          {heatmap.rows.map((r) => (
+            <div key={r.id} className="mt-1 flex items-center">
+              <div className="w-32 shrink-0 truncate pr-2 text-[11px] font-semibold text-[var(--text-primary)]">
+                {r.label}
+              </div>
+              <div className="flex flex-1 gap-0.5">
+                {r.cells.map((level, h) => (
+                  <div
+                    key={h}
+                    className={cn(
+                      "h-6 flex-1 rounded-sm transition",
+                      level === "business" && "bg-emerald-500",
+                      level === "awake" && "bg-amber-400/70",
+                      level === "sleep" && "bg-slate-300 dark:bg-slate-700",
+                      h === heatmap.currentHour &&
+                        "ring-2 ring-[var(--purple)] ring-offset-1 ring-offset-[var(--surface-card)]",
+                    )}
+                    title={`${r.label} at ${String(h).padStart(2, "0")}:00 reference = ${
+                      level === "business"
+                        ? "business hours"
+                        : level === "awake"
+                          ? "awake"
+                          : "asleep"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {/* Business-hours-per-hour bar chart */}
+          <div className="mt-3 flex items-center">
+            <div className="w-32 shrink-0 pr-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              In business
+            </div>
+            <div className="flex flex-1 gap-0.5">
+              {heatmap.businessPerHour.map((count, h) => {
+                const max = heatmap.rows.length || 1;
+                const pct = (count / max) * 100;
+                return (
+                  <div
+                    key={h}
+                    className="flex h-8 flex-1 items-end overflow-hidden rounded-sm bg-[var(--surface-btn-secondary)]"
+                    title={`${count} of ${max} cities in business hours`}
+                  >
+                    <div
+                      className={cn(
+                        "w-full rounded-sm transition-[height]",
+                        count === max && max > 0
+                          ? "bg-emerald-500"
+                          : "bg-emerald-500/40",
+                      )}
+                      style={{ height: `${pct}%` }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Main Component                                                     */
+/*  Main                                                               */
 /* ------------------------------------------------------------------ */
 
 export function TimezoneDifference() {
   const countryOptions = useMemo(() => getCountryOptions(), []);
+  const localZone = useMemo(() => detectLocalZone(), []);
 
-  /* Auto-detect local zone and resolve to country + state */
-  const initialFrom = useMemo(() => {
-    const zone = detectLocalZone();
-    const hit = findLocationForZone(zone);
+  const initial = useMemo(() => {
+    const hit = findLocationForZone(localZone);
     if (!hit) return { country: "US", state: "" };
     return { country: hit.countryIso2, state: hit.state };
-  }, []);
+  }, [localZone]);
 
-  const [fromCountry, setFromCountry] = useState(initialFrom.country);
-  const [fromState, setFromState] = useState(initialFrom.state);
+  const [mode, setMode] = useState<"two" | "multi">("two");
 
+  /* -------- Two-city state -------- */
+  const [fromCountry, setFromCountry] = useState(initial.country);
+  const [fromState, setFromState] = useState(initial.state);
   const [toCountry, setToCountry] = useState("JP");
   const [toState, setToState] = useState("Tokyo");
 
-  const fromStateOptions = useMemo(
-    () => getStateOptions(fromCountry),
-    [fromCountry]
+  /* -------- Multi-city state -------- */
+  const [refCountry, setRefCountry] = useState(initial.country);
+  const [refState, setRefState] = useState(initial.state);
+  const [cities, setCities] = useState<MultiCityEntry[]>(() =>
+    seedCities(localZone),
   );
-  const toStateOptions = useMemo(
-    () => getStateOptions(toCountry),
-    [toCountry]
-  );
+  const [sortMode, setSortMode] = useState<SortMode>("added");
+  const [showHeatmap, setShowHeatmap] = useState(true);
+  const [adding, setAdding] = useState(false);
+  const [newCountry, setNewCountry] = useState("JP");
+  const [newState, setNewState] = useState(() => {
+    const s = getStateOptions("JP");
+    return s[0]?.value ?? "";
+  });
 
-  /* Live tick */
+  /* -------- Live tick -------- */
   const tick = useSyncExternalStore(subscribeTick, getTick, getServerTick);
   const now = useMemo(
     () => (tick === 0 ? null : new Date(tick * TICK_MS)),
-    [tick]
+    [tick],
   );
 
-  /* Resolve zones */
+  /* -------- Two-city computed -------- */
+  const fromStateOptions = useMemo(
+    () => getStateOptions(fromCountry),
+    [fromCountry],
+  );
+  const toStateOptions = useMemo(() => getStateOptions(toCountry), [toCountry]);
   const fromZone = fromState ? resolveTimezone(fromCountry, fromState) : null;
   const toZone = toState ? resolveTimezone(toCountry, toState) : null;
-
   const diff = useMemo(() => {
     if (!now || !fromZone || !toZone) return null;
     return getZoneDifference(fromZone, toZone, now);
   }, [fromZone, toZone, now]);
 
-  /* Handlers that cascade-clear the state dropdown */
+  /* -------- Multi-city computed -------- */
+  const refStateOptions = useMemo(
+    () => getStateOptions(refCountry),
+    [refCountry],
+  );
+  const newStateOptions = useMemo(
+    () => getStateOptions(newCountry),
+    [newCountry],
+  );
+  const refZone = refState ? resolveTimezone(refCountry, refState) : null;
+  const refInfo = useMemo(() => {
+    if (!now || !refZone) return null;
+    return getZoneInfo(refZone, now);
+  }, [now, refZone]);
+
+  const rawRows = useMemo(() => {
+    if (!now || !refZone) return [];
+    return getMultiCityComparison(refZone, cities, now);
+  }, [now, refZone, cities]);
+
+  const sortedRows = useMemo(
+    () => sortRows(rawRows, sortMode),
+    [rawRows, sortMode],
+  );
+
+  const heatmap = useMemo(() => {
+    if (!now || !refZone) return null;
+    return getHeatmap(refZone, cities, now);
+  }, [now, refZone, cities]);
+
+  const bestWindow = useMemo(() => {
+    if (!now || !refZone) return null;
+    return getBestCallWindow(refZone, cities, now);
+  }, [now, refZone, cities]);
+
+  const refLabel = makeCityLabel(refCountry, refState);
+
+  const canAddCity = useMemo(() => {
+    if (!newState) return false;
+    if (cities.length >= MAX_CITIES) return false;
+    const zone = resolveTimezone(newCountry, newState);
+    if (!zone) return false;
+    if (refZone && zone === refZone) return false;
+    if (cities.some((c) => c.zone === zone)) return false;
+    return true;
+  }, [newCountry, newState, refZone, cities]);
+
+  /* -------- Handlers -------- */
   const handleFromCountry = (v: string) => {
     setFromCountry(v);
-    const states = getStateOptions(v);
-    setFromState(states[0]?.value ?? "");
+    setFromState(getStateOptions(v)[0]?.value ?? "");
   };
-
   const handleToCountry = (v: string) => {
     setToCountry(v);
-    const states = getStateOptions(v);
-    setToState(states[0]?.value ?? "");
+    setToState(getStateOptions(v)[0]?.value ?? "");
   };
-
   const swap = () => {
     setFromCountry(toCountry);
     setFromState(toState);
@@ -522,119 +1236,452 @@ export function TimezoneDifference() {
     setToState(fromState);
   };
 
+  const handleRefCountry = (v: string) => {
+    setRefCountry(v);
+    setRefState(getStateOptions(v)[0]?.value ?? "");
+  };
+  const handleNewCountry = (v: string) => {
+    setNewCountry(v);
+    setNewState(getStateOptions(v)[0]?.value ?? "");
+  };
+
+  const handleAddCity = () => {
+    if (!canAddCity) return;
+    const zone = resolveTimezone(newCountry, newState);
+    if (!zone) return;
+    setCities((prev) => [
+      ...prev,
+      { id: makeCityId(), countryIso2: newCountry, state: newState, zone },
+    ]);
+    setAdding(false);
+  };
+
+  const handleRemoveCity = (id: string) =>
+    setCities((prev) => prev.filter((c) => c.id !== id));
+
+  /* -------- Export content -------- */
+  const copyAllText = useMemo(() => {
+    if (!refInfo || !refZone) return "";
+    const lines = [
+      `Reference: ${refLabel} — ${refInfo.currentTime} ${refInfo.abbreviation}`,
+    ];
+    sortedRows.forEach((r) => {
+      const suffix = r.isSameAsReference
+        ? "same as reference"
+        : `${r.diffLabel}${
+            r.dayShift !== 0
+              ? `, ${r.dayShift > 0 ? "+" : "−"}${Math.abs(r.dayShift)}d`
+              : ""
+          }`;
+      lines.push(
+        `${r.label} — ${r.info.currentTime} ${r.info.abbreviation} (${suffix})`,
+      );
+    });
+    return lines.join("\n");
+  }, [refInfo, refZone, refLabel, sortedRows]);
+
+  const csvContent = useMemo(
+    () => toMultiCityCsv(refLabel, sortedRows),
+    [refLabel, sortedRows],
+  );
+
+  const icsContent = useMemo(() => {
+    if (!now) return "";
+    return buildMultiCityIcs(refLabel, sortedRows, now);
+  }, [refLabel, sortedRows, now]);
+
+  const todayStamp = useMemo(() => {
+    const d = now ?? new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+      d.getDate(),
+    ).padStart(2, "0")}`;
+  }, [now]);
+
   return (
     <div className="space-y-4">
       <section className="tool-card rounded-3xl border border-[var(--border-card)] bg-[var(--surface-card)] p-5 sm:p-7">
         <ToolCardHeader slug={TOOL_SLUG} />
 
-        {/* Two side selectors + swap button */}
-        <div className="mt-5 grid items-center gap-3 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-          <SideSelector
-            title="From"
-            country={fromCountry}
-            state={fromState}
-            onCountryChange={handleFromCountry}
-            onStateChange={setFromState}
-            countryOptions={countryOptions}
-            stateOptions={fromStateOptions}
-          />
-
-          <button
-            type="button"
-            onClick={swap}
-            aria-label="Swap zones"
-            className="mx-auto grid size-10 shrink-0 place-items-center rounded-xl border border-[var(--border-input)] bg-[var(--surface-input)] text-muted-foreground transition hover:bg-[var(--surface-btn-secondary)] hover:text-[var(--text-primary)]"
-          >
-            <ArrowLeftRight size={15} />
-          </button>
-
-          <SideSelector
-            title="To"
-            country={toCountry}
-            state={toState}
-            onCountryChange={handleToCountry}
-            onStateChange={setToState}
-            countryOptions={countryOptions}
-            stateOptions={toStateOptions}
-          />
+        {/* Mode toggle */}
+        <div className="mt-5 inline-flex rounded-xl bg-[var(--surface-btn-secondary)] p-1">
+          <ModeTab active={mode === "two"} onClick={() => setMode("two")}>
+            <ArrowLeftRight size={13} />
+            Two cities
+          </ModeTab>
+          <ModeTab active={mode === "multi"} onClick={() => setMode("multi")}>
+            <Layers size={13} />
+            Multi-city
+          </ModeTab>
         </div>
 
-        {/* Main content */}
-        <div className="mt-6 flex flex-col gap-6">
-          {diff ? (
-            <div className="space-y-4">
-              {/* Big diff header */}
-              <div className="rounded-2xl border border-[var(--border-card)] bg-[var(--surface-card)] p-6 text-center">
-                <p className="text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">
-                  Time Difference
+        {/* ============================================================ */}
+        {/* TWO-CITY MODE                                                */}
+        {/* ============================================================ */}
+        {mode === "two" && (
+          <>
+            <div className="mt-5 grid items-center gap-3 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+              <div className="rounded-xl border border-[var(--border-card)] bg-[var(--surface-card)] p-3">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">
+                  From
                 </p>
-                <p className="mt-2 font-mono text-[clamp(40px,9vw,64px)] font-bold leading-none tracking-[-.04em] text-[var(--purple)]">
-                  {diff.diffLabel}
-                </p>
-                <p className="mt-3 text-[14px] font-medium text-[var(--text-primary)]">
-                  {diff.diffText}
-                </p>
+                <LocationPicker
+                  country={fromCountry}
+                  state={fromState}
+                  onCountryChange={handleFromCountry}
+                  onStateChange={setFromState}
+                  countryOptions={countryOptions}
+                  stateOptions={fromStateOptions}
+                />
               </div>
 
-              {/* Side-by-side clocks */}
-              <div className="grid gap-3 sm:grid-cols-2">
-                {[diff.from, diff.to].map((zone, idx) => (
-                  <div
-                    key={`${zone.zone}-${idx}`}
-                    className="rounded-xl border border-[var(--border-card)] bg-[var(--surface-card)] p-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                          {zone.abbreviation} · {zone.offsetLabel}
-                        </p>
-                        <p className="mt-0.5 truncate text-[13px] font-semibold text-[var(--text-primary)]">
-                          {idx === 0 ? fromState : toState}
-                        </p>
-                      </div>
-                      <span
-                        className={cn(
-                          "grid size-8 shrink-0 place-items-center rounded-lg",
-                          zone.isDaytime
-                            ? "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400"
-                            : "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400"
-                        )}
-                      >
-                        {zone.isDaytime ? <Sun size={14} /> : <Moon size={14} />}
-                      </span>
-                    </div>
+              <button
+                type="button"
+                onClick={swap}
+                aria-label="Swap zones"
+                className="mx-auto grid size-10 shrink-0 place-items-center rounded-xl border border-[var(--border-input)] bg-[var(--surface-input)] text-muted-foreground transition hover:bg-[var(--surface-btn-secondary)] hover:text-[var(--text-primary)]"
+              >
+                <ArrowLeftRight size={15} />
+              </button>
 
-                    <p className="mt-3 font-mono text-[clamp(24px,5vw,32px)] font-bold leading-none tracking-[-.03em] text-[var(--text-primary)]">
-                      {zone.currentTime}
+              <div className="rounded-xl border border-[var(--border-card)] bg-[var(--surface-card)] p-3">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">
+                  To
+                </p>
+                <LocationPicker
+                  country={toCountry}
+                  state={toState}
+                  onCountryChange={handleToCountry}
+                  onStateChange={setToState}
+                  countryOptions={countryOptions}
+                  stateOptions={toStateOptions}
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-6">
+              {diff ? (
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-[var(--border-card)] bg-[var(--surface-card)] p-6 text-center">
+                    <p className="text-[10px] font-bold uppercase tracking-[.18em] text-muted-foreground">
+                      Time Difference
                     </p>
-                    <p className="mt-1 text-[12px] text-muted-foreground">
-                      {zone.currentDate}
+                    <p className="mt-2 font-mono text-[clamp(40px,9vw,64px)] font-bold leading-none tracking-[-.04em] text-[var(--purple)]">
+                      {diff.diffLabel}
+                    </p>
+                    <p className="mt-3 text-[14px] font-medium text-[var(--text-primary)]">
+                      {diff.diffText}
                     </p>
                   </div>
-                ))}
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {[diff.from, diff.to].map((zone, idx) => (
+                      <div
+                        key={`${zone.zone}-${idx}`}
+                        className="rounded-xl border border-[var(--border-card)] bg-[var(--surface-card)] p-4"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                              {zone.abbreviation} · {zone.offsetLabel}
+                            </p>
+                            <p className="mt-0.5 truncate text-[13px] font-semibold text-[var(--text-primary)]">
+                              {idx === 0 ? fromState : toState}
+                            </p>
+                          </div>
+                          <span
+                            className={cn(
+                              "grid size-8 shrink-0 place-items-center rounded-lg",
+                              zone.isDaytime
+                                ? "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400"
+                                : "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400",
+                            )}
+                          >
+                            {zone.isDaytime ? (
+                              <Sun size={14} />
+                            ) : (
+                              <Moon size={14} />
+                            )}
+                          </span>
+                        </div>
+
+                        <p className="mt-3 font-mono text-[clamp(24px,5vw,32px)] font-bold leading-none tracking-[-.03em] text-[var(--text-primary)]">
+                          {zone.currentTime}
+                        </p>
+                        <p className="mt-1 text-[12px] text-muted-foreground">
+                          {zone.currentDate}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-[var(--border-card)] p-6 text-center">
+                  <p className="text-[13px] text-muted-foreground">
+                    Pick a country and state on both sides to see the
+                    difference.
+                  </p>
+                </div>
+              )}
+
+              {diff && (
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--border-card)] bg-[var(--surface-btn-secondary)] px-4 py-3">
+                  <span className="inline-flex items-center gap-2 text-[12px] text-muted-foreground">
+                    <Clock3 size={13} />
+                    Live · updated every second
+                  </span>
+                  <CopyButton
+                    value={`${fromState} is ${diff.diffLabel} relative to ${toState}`}
+                  />
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ============================================================ */}
+        {/* MULTI-CITY MODE                                              */}
+        {/* ============================================================ */}
+        {mode === "multi" && (
+          <div className="mt-5 flex flex-col gap-4">
+            {/* Reference picker */}
+            <div className="rounded-2xl border border-[var(--border-card)] bg-[var(--surface-card)] p-4">
+              <p className="mb-3 text-[10px] font-bold uppercase tracking-[.18em] text-purple-600 dark:text-purple-400">
+                Reference
+              </p>
+
+              <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                <LocationPicker
+                  country={refCountry}
+                  state={refState}
+                  onCountryChange={handleRefCountry}
+                  onStateChange={setRefState}
+                  countryOptions={countryOptions}
+                  stateOptions={refStateOptions}
+                />
+
+                {refInfo && refZone && (
+                  <div className="text-left sm:text-right">
+                    <p className="font-mono text-[clamp(28px,6vw,36px)] font-bold leading-none tracking-[-.03em] text-[var(--text-primary)]">
+                      {refInfo.currentTime}
+                    </p>
+                    <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {refLabel} · {refInfo.abbreviation}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
-          ) : (
-            <div className="rounded-2xl border border-dashed border-[var(--border-card)] p-6 text-center">
-              <p className="text-[13px] text-muted-foreground">
-                Pick a country and state on both sides to see the difference.
-              </p>
-            </div>
-          )}
 
-          {/* Footer */}
-          {diff && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--border-card)] bg-[var(--surface-btn-secondary)] px-4 py-3">
-              <span className="inline-flex items-center gap-2 text-[12px] text-muted-foreground">
-                <Clock3 size={13} />
-                Live · updated every second
-              </span>
-              <CopyButton
-                value={`${fromState} is ${diff.diffLabel} relative to ${toState}`}
-              />
+            {/* Best-call summary */}
+            {bestWindow && cities.length > 0 && (
+              <div className="rounded-xl border border-[var(--border-card)] bg-[var(--surface-btn-secondary)] px-4 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={cn(
+                        "grid size-9 place-items-center rounded-lg",
+                        bestWindow.citiesInBusinessNow > 0
+                          ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400"
+                          : "bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400",
+                      )}
+                    >
+                      <Phone size={15} />
+                    </span>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Best time to call — right now
+                      </p>
+                      <p className="text-[13px] font-semibold text-[var(--text-primary)]">
+                        {bestWindow.citiesInBusinessNow} of {cities.length}{" "}
+                        cities in business hours (9 AM – 6 PM)
+                      </p>
+                    </div>
+                  </div>
+
+                  {bestWindow.majorityHours.length > 0 && (
+                    <div className="text-left sm:text-right">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Best window · reference time
+                      </p>
+                      <p className="font-mono text-[13px] font-semibold text-[var(--text-primary)]">
+                        {formatHourRanges(bestWindow.majorityHours)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Toolbar */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-card)] bg-[var(--surface-card)] px-2 py-1">
+                  <ArrowUpDown size={12} className="text-muted-foreground" />
+                  <select
+                    value={sortMode}
+                    onChange={(e) => setSortMode(e.target.value as SortMode)}
+                    className="cursor-pointer bg-transparent text-[11px] font-bold outline-none"
+                    style={{
+                      color: "var(--text-primary)",
+                      colorScheme: "dark light",
+                    }}
+                  >
+                    <option
+                      value="added"
+                      style={{
+                        backgroundColor: "var(--surface-card)",
+                        color: "var(--text-primary)",
+                      }}
+                    >
+                      As added
+                    </option>
+                    <option
+                      value="east-west"
+                      style={{
+                        backgroundColor: "var(--surface-card)",
+                        color: "var(--text-primary)",
+                      }}
+                    >
+                      East → West
+                    </option>
+                    <option
+                      value="west-east"
+                      style={{
+                        backgroundColor: "var(--surface-card)",
+                        color: "var(--text-primary)",
+                      }}
+                    >
+                      West → East
+                    </option>
+                  </select>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setAdding((v) => !v)}
+                  disabled={cities.length >= MAX_CITIES && !adding}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-card)] bg-[var(--surface-card)] px-3 py-1.5 text-[11px] font-bold text-[var(--text-primary)] transition hover:bg-[var(--surface-btn-secondary)] disabled:opacity-40"
+                >
+                  {adding ? <X size={12} /> : <Plus size={12} />}
+                  {adding ? "Cancel" : "Add city"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowHeatmap((v) => !v)}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-bold transition",
+                    showHeatmap
+                      ? "border-[var(--purple)]/40 bg-[var(--purple)]/10 text-[var(--purple)]"
+                      : "border-[var(--border-card)] bg-[var(--surface-card)] text-[var(--text-primary)] hover:bg-[var(--surface-btn-secondary)]",
+                  )}
+                >
+                  <BarChart3 size={12} />
+                  {showHeatmap ? "Hide heatmap" : "Show heatmap"}
+                </button>
+              </div>
+
+              {sortedRows.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <CopyButton value={copyAllText} label="Copy list" />
+                  <CopyButton value={csvContent} label="Copy CSV" />
+                  <FileButton
+                    content={csvContent}
+                    filename={`timezone-comparison-${todayStamp}.csv`}
+                    mimeType="text/csv"
+                    label=".csv"
+                    icon={<FileSpreadsheet size={12} />}
+                  />
+                  <FileButton
+                    content={icsContent}
+                    filename={`timezone-comparison-${todayStamp}.ics`}
+                    mimeType="text/calendar"
+                    label=".ics"
+                    icon={<Download size={12} />}
+                  />
+                </div>
+              )}
             </div>
-          )}
-        </div>
+
+            {/* Add-city form */}
+            {adding && (
+              <div className="rounded-xl border border-purple-400/40 bg-purple-50/50 p-3 dark:border-purple-500/30 dark:bg-purple-500/5">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                  Add a city
+                </p>
+                <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                  <SearchableSelect
+                    value={newCountry}
+                    onChange={handleNewCountry}
+                    options={countryOptions}
+                    placeholder="Country..."
+                  />
+                  <SearchableSelect
+                    value={newState}
+                    onChange={setNewState}
+                    options={newStateOptions}
+                    placeholder={
+                      newStateOptions.length === 0 ? "No states" : "State..."
+                    }
+                    disabled={newStateOptions.length === 0}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCity}
+                    disabled={!canAddCity}
+                    className="h-[42px] rounded-[10px] bg-purple-600 px-4 text-[13px] font-bold text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Add
+                  </button>
+                </div>
+                {newState && !canAddCity && (
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    {cities.length >= MAX_CITIES
+                      ? `Maximum ${MAX_CITIES} cities. Remove one to add more.`
+                      : "This location is already in the list."}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* City list */}
+            {cities.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-[var(--border-card)] p-8 text-center">
+                <p className="text-[13px] text-muted-foreground">
+                  No cities yet. Click{" "}
+                  <span className="font-bold text-[var(--text-primary)]">
+                    Add city
+                  </span>{" "}
+                  to start comparing time zones.
+                </p>
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                {sortedRows.map((row) => (
+                  <CityRow
+                    key={row.id}
+                    row={row}
+                    onRemove={() => handleRemoveCity(row.id)}
+                  />
+                ))}
+              </ul>
+            )}
+
+            {/* Heatmap */}
+            {showHeatmap && heatmap && cities.length > 0 && (
+              <HeatmapView heatmap={heatmap} referenceLabel={refLabel} />
+            )}
+
+            {/* Footer note */}
+            {cities.length > 0 && (
+              <p className="text-[11px] text-muted-foreground">
+                Green rows are currently in business hours (9 AM – 6 PM) in that
+                city. Day shift badges (+1d / −1d) indicate a different calendar
+                day than the reference.
+              </p>
+            )}
+          </div>
+        )}
       </section>
     </div>
   );
