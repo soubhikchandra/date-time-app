@@ -1,6 +1,6 @@
 // src/features/calculators/calendar/logic.ts
 import Holidays from "date-holidays";
-import { format } from "date-fns";
+import { format,addDays } from "date-fns";
 import { ChineseDate, type LocaleCode } from "chinese-lunar-date";
 import * as SunCalc from "suncalc";
 
@@ -395,4 +395,159 @@ export function getSunTimes(
     console.error("Error calculating sun times:", error);
     return null;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Long Weekend Finder                                                */
+/* ------------------------------------------------------------------ */
+
+export interface LongWeekend {
+  id: string;
+  start: Date;
+  end: Date;
+  daysOff: number;
+  holidayNames: string[];
+}
+
+/**
+ * Scans the year and returns all runs of 3+ consecutive off-days
+ * (weekends + holidays merged).
+ */
+export function getLongWeekends(
+  holidays: HolidayItem[],
+  year: number
+): LongWeekend[] {
+  const holidayByDate = new Map<string, HolidayItem[]>();
+  holidays.forEach((h) => {
+    if (!holidayByDate.has(h.dateString)) holidayByDate.set(h.dateString, []);
+    holidayByDate.get(h.dateString)!.push(h);
+  });
+
+  const offDaySet = new Set<string>();
+  const start = new Date(year, 0, 1);
+  const end = new Date(year, 11, 31);
+
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const dow = d.getDay();
+    const key = format(d, "yyyy-MM-dd");
+    if (dow === 0 || dow === 6) offDaySet.add(key);
+    if (holidayByDate.has(key)) offDaySet.add(key);
+  }
+
+  const longWeekends: LongWeekend[] = [];
+  let runStart: Date | null = null;
+  let runEnd: Date | null = null;
+  let runHolidayNames: string[] = [];
+
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const key = format(d, "yyyy-MM-dd");
+    const isOff = offDaySet.has(key);
+
+    if (isOff) {
+      if (!runStart) {
+        runStart = new Date(d);
+        runHolidayNames = [];
+      }
+      runEnd = new Date(d);
+      const hs = holidayByDate.get(key);
+      if (hs) runHolidayNames.push(...hs.map((h) => h.name));
+    } else {
+      if (runStart && runEnd) {
+        const daysOff =
+          Math.round((runEnd.getTime() - runStart.getTime()) / 86400000) + 1;
+        if (daysOff >= 3) {
+          longWeekends.push({
+            id: `${format(runStart, "yyyy-MM-dd")}-${format(runEnd, "yyyy-MM-dd")}`,
+            start: new Date(runStart),
+            end: new Date(runEnd),
+            daysOff,
+            holidayNames: [...new Set(runHolidayNames)],
+          });
+        }
+      }
+      runStart = null;
+      runEnd = null;
+      runHolidayNames = [];
+    }
+  }
+
+  return longWeekends;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Bridge Day Suggester                                               */
+/* ------------------------------------------------------------------ */
+
+export interface BridgeSuggestion {
+  id: string;
+  leaveDate: Date;
+  holiday: HolidayItem;
+  breakStart: Date;
+  breakEnd: Date;
+  totalDaysOff: number;
+}
+
+/**
+ * For each weekday holiday, suggest the single leave day that turns it
+ * into the longest possible break. Weekends and other holidays are
+ * treated as already-off when measuring the resulting break.
+ */
+export function getBridgeSuggestions(
+  holidays: HolidayItem[]
+): BridgeSuggestion[] {
+  const holidayDates = new Set(holidays.map((h) => h.dateString));
+
+  const isOff = (d: Date): boolean => {
+    const dow = d.getDay();
+    if (dow === 0 || dow === 6) return true;
+    return holidayDates.has(format(d, "yyyy-MM-dd"));
+  };
+
+  const suggestions: BridgeSuggestion[] = [];
+  const seen = new Set<string>();
+
+  for (const h of holidays) {
+    const d = h.date;
+    const dow = d.getDay();
+
+    // Skip holidays already on a weekend
+    if (dow === 0 || dow === 6) continue;
+
+    let leaveDay: Date | null = null;
+    if (dow === 2) leaveDay = addDays(d, -1); // Tue → Mon
+    else if (dow === 4) leaveDay = addDays(d, 1); // Thu → Fri
+    else if (dow === 1) leaveDay = addDays(d, -3); // Mon → prev Fri
+    else if (dow === 5) leaveDay = addDays(d, 3); // Fri → next Mon
+    else if (dow === 3) leaveDay = addDays(d, -1); // Wed → Tue
+
+    if (!leaveDay) continue;
+    if (isOff(leaveDay)) continue;
+
+    const key = format(leaveDay, "yyyy-MM-dd");
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    // Walk back/forward to measure the resulting consecutive break
+    let bs = new Date(leaveDay);
+    let be = new Date(leaveDay);
+    while (isOff(addDays(bs, -1))) bs = addDays(bs, -1);
+    while (isOff(addDays(be, 1))) be = addDays(be, 1);
+
+    const daysOff =
+      Math.round((be.getTime() - bs.getTime()) / 86400000) + 1;
+    if (daysOff < 3) continue;
+
+    suggestions.push({
+      id: `${key}-${h.dateString}`,
+      leaveDate: leaveDay,
+      holiday: h,
+      breakStart: bs,
+      breakEnd: be,
+      totalDaysOff: daysOff,
+    });
+  }
+
+  return suggestions.sort(
+    (a, b) => a.leaveDate.getTime() - b.leaveDate.getTime()
+  );
 }
