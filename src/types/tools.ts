@@ -18,7 +18,8 @@ export type CalculatorKey =
   | "calendar"
   |"sunrise-sunset"
   | "festival-calendar"
-  | "fiscal-quarter"; 
+  | "fiscal-quarter"
+  | "date-range"; 
 
 export interface ToolConfig {
   slug: string;
