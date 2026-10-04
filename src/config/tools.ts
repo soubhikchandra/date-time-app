@@ -14,6 +14,7 @@ import {
   ArrowLeftRight,
   Sparkles,
   ListOrdered,
+  MoonStar,
 } from "lucide-react";
 import type { ToolConfig } from "@/types/tools";
 
@@ -36,6 +37,7 @@ export const TOOLS: ToolConfig[] = [
   { slug: "festival-calendar",  name: "Festival Calendar",         category: "timezone", description: "All festivals from every religion in one filterable calendar.", icon: Sparkles, calculator: "festival-calendar" },
   { slug: "fiscal-quarter", name: "Fiscal Quarter Calculator", category: "dates", description: "Find the current fiscal quarter for any fiscal year start.", icon: CalendarRange, calculator: "fiscal-quarter" },
   { slug: "date-range", name: "Date Range Calculator", category: "dates", description: "List every date between two dates, with filters.", icon: ListOrdered, calculator: "date-range" },
+  { slug: "lunar-phase", name: "Lunar Phase Calculator", category: "timezone", description: "Moon phase, moonrise/set, and live compass position.", icon: MoonStar, calculator: "lunar-phase" },
 ];
 
 
