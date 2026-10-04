@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import type { ToolConfig } from "@/types/tools";
 
-
 export const TOOLS: ToolConfig[] = [
   { slug: "age-calculator",     name: "Age Calculator",            category: "dates",    description: "Find your exact age in years, months, and days.",      icon: Cake,          calculator: "age-calculator" },
   { slug: "date-difference",    name: "Date Difference",           category: "dates",    description: "Calculate days, weeks, and months between two dates.", icon: CalendarRange, calculator: "date-difference" },
@@ -40,8 +39,8 @@ export const TOOLS: ToolConfig[] = [
 ];
 
 
-
-export const getToolBySlug = (slug: string) => TOOLS.find((t)=>t.slug === slug);
+export const getToolBySlug = (slug: string) =>
+  TOOLS.find((t) => t.slug === slug);
 
 export const getToolsByCategory = (): Record<string, ToolConfig[]> =>
   TOOLS.reduce<Record<string, ToolConfig[]>>((acc, t) => {
@@ -50,5 +49,3 @@ export const getToolsByCategory = (): Record<string, ToolConfig[]> =>
   }, {});
 
 // slug is identifire tool on URL then it find the Tool key then get the correct component.
-
-

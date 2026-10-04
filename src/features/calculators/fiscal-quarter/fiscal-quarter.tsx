@@ -18,6 +18,18 @@ import {
 const TOOL_SLUG = "fiscal-quarter";
 
 /* ------------------------------------------------------------------ */
+/*  Safe formatter — never throws on invalid dates                     */
+/* ------------------------------------------------------------------ */
+function safeFormat(date: Date | null | undefined, pattern: string): string {
+  if (!date || Number.isNaN(date.getTime())) return "—";
+  try {
+    return format(date, pattern);
+  } catch {
+    return "—";
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /*  Copy button                                                        */
 /* ------------------------------------------------------------------ */
 
@@ -80,7 +92,7 @@ function QuarterCard({ q }: { q: QuarterInfo }) {
       </div>
 
       <p className="mt-2 text-[11px] text-muted-foreground">
-        {format(q.start, "MMM d")} → {format(q.end, "MMM d")}
+        {safeFormat(q.start, "MMM d")} → {safeFormat(q.end, "MMM d")}
       </p>
 
       <div className="mt-2">
@@ -115,13 +127,21 @@ export function FiscalQuarter() {
   const [dateISO, setDateISO] = useState(format(new Date(), "yyyy-MM-dd"));
 
   const reference = useMemo(() => {
-    try {
-      const d = parseISO(dateISO);
-      d.setHours(12, 0, 0, 0);
-      return d;
-    } catch {
-      return new Date();
+    // Empty or invalid-format input → fall back to today at noon
+    if (!dateISO || !/^\d{4}-\d{2}-\d{2}$/.test(dateISO)) {
+      const today = new Date();
+      today.setHours(12, 0, 0, 0);
+      return today;
     }
+    const d = parseISO(dateISO);
+    // parseISO can return an Invalid Date even for valid-looking strings
+    if (Number.isNaN(d.getTime())) {
+      const today = new Date();
+      today.setHours(12, 0, 0, 0);
+      return today;
+    }
+    d.setHours(12, 0, 0, 0);
+    return d;
   }, [dateISO]);
 
   const config = useMemo(
@@ -246,8 +266,8 @@ export function FiscalQuarter() {
                 </span>
               </p>
               <p className="mt-3 text-[14px] font-medium text-[var(--text-primary)]">
-                {format(result.quarter.start, "MMM d, yyyy")} →{" "}
-                {format(result.quarter.end, "MMM d, yyyy")}
+                {safeFormat(result.quarter.start, "MMM d, yyyy")} →{" "}
+                {safeFormat(result.quarter.end, "MMM d, yyyy")}
               </p>
 
               {/* Progress bar */}
@@ -310,11 +330,11 @@ export function FiscalQuarter() {
               <span className="inline-flex items-center gap-2 text-[12px] text-muted-foreground">
                 <CalendarRange size={13} />
                 FY{result.quarter.fiscalYear}:{" "}
-                {format(result.fiscalYearStart, "MMM d, yyyy")} →{" "}
-                {format(result.fiscalYearEnd, "MMM d, yyyy")}
+                {safeFormat(result.fiscalYearStart, "MMM d, yyyy")} →{" "}
+                {safeFormat(result.fiscalYearEnd, "MMM d, yyyy")}
               </span>
               <CopyButton
-                value={`Q${result.quarter.index} FY${result.quarter.fiscalYear}: ${format(result.quarter.start, "yyyy-MM-dd")} to ${format(result.quarter.end, "yyyy-MM-dd")}`}
+                value={`Q${result.quarter.index} FY${result.quarter.fiscalYear}: ${safeFormat(result.quarter.start, "yyyy-MM-dd")} to ${safeFormat(result.quarter.end, "yyyy-MM-dd")}`}
               />
             </div>
           </div>
@@ -367,7 +387,8 @@ export function FiscalQuarter() {
                     Q{q.index}
                   </span>
                   <span className="shrink-0 text-[13px] font-semibold text-[var(--text-primary)] sm:text-[14px]">
-                    {format(q.start, "MMM d")} – {format(q.end, "MMM d, yyyy")}
+                    {safeFormat(q.start, "MMM d")} –{" "}
+                    {safeFormat(q.end, "MMM d, yyyy")}
                   </span>
                   <span className="min-w-0 flex-1 text-right text-[13px] font-medium text-muted-foreground sm:text-[14px]">
                     {q.daysTotal} days
