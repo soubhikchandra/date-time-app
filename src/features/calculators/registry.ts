@@ -15,6 +15,7 @@ import { Calendar } from "./calendar";
 import { TimezoneDifference } from "./timezone-difference";
 import { SunriseSunset } from "./sunrise-sunset"; 
 import { FestivalCalendar } from "./festival-calendar";
+import { FiscalQuarter } from "./fiscal-quarter";
 
 export const CALCULATOR_REGISTRY: Partial<Record<CalculatorKey, ComponentType>> = {
   "age-calculator": AgeCalculator,
@@ -32,4 +33,5 @@ export const CALCULATOR_REGISTRY: Partial<Record<CalculatorKey, ComponentType>> 
   "timezone-difference": TimezoneDifference,
   "sunrise-sunset": SunriseSunset,
    "festival-calendar": FestivalCalendar,
+   "fiscal-quarter": FiscalQuarter,
 };

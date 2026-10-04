@@ -33,6 +33,7 @@ export const TOOLS: ToolConfig[] = [
   { slug: "timezone-difference",name: "Time Zone Difference",      category: "timezone", description: "See how many hours ahead or behind any two time zones are.", icon: ArrowLeftRight, calculator: "timezone-difference" },
   { slug: "sunrise-sunset",     name: "Sunrise & Sunset",          category: "timezone", description: "Sunrise, sunset, and twilight times for any city.",  icon: Sunrise,      calculator: "sunrise-sunset" },
   { slug: "festival-calendar",  name: "Festival Calendar",         category: "timezone", description: "All festivals from every religion in one filterable calendar.", icon: Sparkles, calculator: "festival-calendar" },
+  { slug: "fiscal-quarter", name: "Fiscal Quarter Calculator", category: "dates", description: "Find the current fiscal quarter for any fiscal year start.", icon: CalendarRange, calculator: "fiscal-quarter" },
 ];
 
 
