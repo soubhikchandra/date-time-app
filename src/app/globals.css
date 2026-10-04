@@ -59,7 +59,7 @@
   /* ---------------------------------------------------------------- */
   /*  SEMANTIC SURFACE TOKENS (used by components)                     */
   /* ---------------------------------------------------------------- */
-  --surface-page: #eef1fa;
+  --surface-page: #ccd2e6;
   --surface-card: #ffffff;
   --surface-card-soft: #f7f8fc;
   --surface-input: #f7f8fc;
@@ -476,6 +476,35 @@ input[type="week"] {
   border: 2px solid transparent;
 }
 
+/* ================================================================== */
+/*  Scrollbars — light mode                                            */
+/* ================================================================== */
+:where(html:not(.dark)) {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(90, 75, 199, 0.35) transparent;
+}
+
+:where(html:not(.dark)) ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+:where(html:not(.dark)) ::-webkit-scrollbar-track {
+  background: transparent;
+}
+:where(html:not(.dark)) ::-webkit-scrollbar-thumb {
+  background: rgba(90, 75, 199, 0.35);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+:where(html:not(.dark)) ::-webkit-scrollbar-thumb:hover {
+  background: rgba(90, 75, 199, 0.65);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+:where(html:not(.dark)) ::-webkit-scrollbar-corner {
+  background: transparent;
+}
 /* ================================================================== */
 /*  HERO CARD — theme-aware                                            */
 /* ================================================================== */
