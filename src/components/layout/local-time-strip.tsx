@@ -61,14 +61,12 @@ export function LocalTimeStrip() {
     getMountedServer
   );
 
-  /* ---- Live clock (SSR-safe: 0 on server, real tick on client) ---- */
   const tick = useSyncExternalStore(subscribeTick, getTickClient, getTickServer);
   const now = useMemo(
     () => (tick === 0 ? null : new Date(tick * TICK_MS)),
     [tick]
   );
 
-  /* ---- Location: derived from timezone, no effect needed ---------- */
   const detectedLocation = useMemo<ResolvedLocation | null>(() => {
     if (!mounted) return null;
     try {
@@ -92,7 +90,6 @@ export function LocalTimeStrip() {
     }
   }, [mounted]);
 
-  /* ---- Optional GPS upgrade (user-triggered, in a callback) ----- */
   const [gpsLocation, setGpsLocation] = useState<ResolvedLocation | null>(null);
   const [gpsBusy, setGpsBusy] = useState(false);
   const [gpsDenied, setGpsDenied] = useState(false);
@@ -125,22 +122,17 @@ export function LocalTimeStrip() {
 
   const location = gpsLocation ?? detectedLocation;
 
-  /* ---- Fallback timezone if nothing else resolved ---------------- */
   const browserTz = useMemo(
     () =>
-      mounted
-        ? Intl.DateTimeFormat().resolvedOptions().timeZone
-        : "UTC",
+      mounted ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC",
     [mounted]
   );
   const tz = location?.tz ?? browserTz;
 
-  /* ---- Skeleton on server / first paint -------------------------- */
   if (!now) {
     return <div className="surface-card min-h-[72px]" aria-hidden="true" />;
   }
 
-  /* ---- Time & date in target zone -------------------------------- */
   const time = new Intl.DateTimeFormat(undefined, {
     timeZone: tz,
     hour: "2-digit",
@@ -150,13 +142,11 @@ export function LocalTimeStrip() {
 
   const date = new Intl.DateTimeFormat(undefined, {
     timeZone: tz,
-    weekday: "long",
+    weekday: "short",
     month: "short",
     day: "numeric",
-    year: "numeric",
   }).format(now);
 
-  /* ---- UTC offset label (e.g. "GMT+05:30") ---------------------- */
   const offsetLabel =
     new Intl.DateTimeFormat("en-US", {
       timeZone: tz,
@@ -165,7 +155,6 @@ export function LocalTimeStrip() {
       .formatToParts(now)
       .find((p) => p.type === "timeZoneName")?.value ?? "";
 
-  /* ---- Sunrise / sunset (only if we have lat+lng) --------------- */
   let sunrise: string | null = null;
   let sunset: string | null = null;
 
@@ -185,42 +174,41 @@ export function LocalTimeStrip() {
         sunset = formatTimeInZone(sun.sunset, tz);
       }
     } catch {
-      /* sun calc is optional */
+      /* optional */
     }
   }
 
   return (
     <div
-      className="surface-card flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-5 py-3.5"
+      className="surface-card flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3 sm:gap-x-6 sm:gap-y-3 sm:px-5 sm:py-3.5"
       role="region"
       aria-label="Your local time and sun times"
     >
       {/* ---- Left: clock + location ---- */}
-      <div className="flex min-w-0 items-center gap-3">
+      <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:flex-none sm:gap-3">
         <span
-          className="grid size-10 shrink-0 place-items-center rounded-lg"
+          className="grid size-9 shrink-0 place-items-center rounded-lg sm:size-10"
           style={{
             backgroundColor: "var(--purple-light)",
             color: "var(--purple)",
           }}
         >
-          <Clock size={18} strokeWidth={2.2} />
+          <Clock size={16} strokeWidth={2.2} className="sm:hidden" />
+          <Clock size={18} strokeWidth={2.2} className="hidden sm:block" />
         </span>
         <div className="min-w-0">
           <p
-            className="flex items-center gap-1.5 truncate text-[10.5px] font-bold uppercase tracking-[.16em]"
+            className="flex items-center gap-1.5 truncate text-[10px] font-bold uppercase tracking-[.16em] sm:text-[10.5px]"
             style={{ color: "var(--text-muted)" }}
           >
-            <MapPin size={11} />
-            {location ? location.name : "Your timezone"}
-            {location?.region && (
-              <span className="font-normal normal-case tracking-normal">
-                · {location.region}
-              </span>
-            )}
+            <MapPin size={10} className="shrink-0 sm:hidden" />
+            <MapPin size={11} className="hidden shrink-0 sm:block" />
+            <span className="truncate">
+              {location ? location.name : "Your timezone"}
+            </span>
           </p>
           <p
-            className="font-mono text-[22px] font-extrabold leading-tight tracking-[-.03em] tabular-nums"
+            className="truncate font-mono text-[15px] font-extrabold leading-tight tracking-[-.02em] tabular-nums sm:text-[22px] sm:tracking-[-.03em]"
             style={{ color: "var(--text-primary)" }}
           >
             {time}
@@ -228,49 +216,57 @@ export function LocalTimeStrip() {
         </div>
       </div>
 
-      {/* ---- Middle: date · tz · offset ---- */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px]">
+      {/* ---- Middle + Right: single line, wraps only as a group on mobile ---- */}
+      <div className="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-[11.5px] sm:w-auto sm:gap-x-4 sm:text-[13px]">
         <span
-          className="inline-flex items-center gap-1.5"
+          className="inline-flex min-w-0 items-center gap-1.5"
           style={{ color: "var(--text-secondary)" }}
         >
-          <Calendar size={13} style={{ color: "var(--text-muted)" }} />
-          {date}
+          <Calendar size={12} style={{ color: "var(--text-muted)" }} className="shrink-0" />
+          <span className="truncate">{date}</span>
         </span>
+
         <span
-          className="inline-flex items-center gap-1.5"
+          className="inline-flex min-w-0 items-center gap-1.5"
           style={{ color: "var(--text-secondary)" }}
         >
-          <Globe size={13} style={{ color: "var(--text-muted)" }} />
-          {tz}
+          <Globe size={12} style={{ color: "var(--text-muted)" }} className="shrink-0" />
+          <span className="truncate">{tz}</span>
         </span>
+
         {offsetLabel && (
           <span
-            className="font-mono text-[12px] font-semibold"
+            className="font-mono text-[10.5px] font-semibold sm:text-[12px]"
             style={{ color: "var(--purple)" }}
           >
             {offsetLabel}
           </span>
         )}
-      </div>
 
-      {/* ---- Right: sunrise / sunset + GPS upgrade ---- */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px]">
         {sunrise && (
           <span
-            className="inline-flex items-center gap-1.5 font-mono text-[13px] font-semibold"
+            className="inline-flex items-center gap-1.5 font-mono text-[11.5px] font-semibold sm:text-[13px]"
             style={{ color: "var(--text-primary)" }}
           >
-            <Sunrise size={14} style={{ color: "#d97a1a" }} />
+            <Sunrise
+              size={13}
+              style={{ color: "#d97a1a" }}
+              className="shrink-0"
+            />
             {sunrise}
           </span>
         )}
+
         {sunset && (
           <span
-            className="inline-flex items-center gap-1.5 font-mono text-[13px] font-semibold"
+            className="inline-flex items-center gap-1.5 font-mono text-[11.5px] font-semibold sm:text-[13px]"
             style={{ color: "var(--text-primary)" }}
           >
-            <Sunset size={14} style={{ color: "#c25c8a" }} />
+            <Sunset
+              size={13}
+              style={{ color: "#c25c8a" }}
+              className="shrink-0"
+            />
             {sunset}
           </span>
         )}
@@ -280,14 +276,14 @@ export function LocalTimeStrip() {
             type="button"
             onClick={requestPrecise}
             disabled={gpsBusy}
-            className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition hover:brightness-[0.97] disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10.5px] font-semibold transition hover:brightness-[0.97] disabled:opacity-60 sm:px-2.5 sm:py-1 sm:text-[11px]"
             style={{
               borderColor: "var(--border-card)",
               color: "var(--text-secondary)",
             }}
             title="Use your device's precise location for exact sun times"
           >
-            <Navigation size={11} />
+            <Navigation size={10} className="shrink-0" />
             {gpsBusy ? "Locating…" : "Use precise location"}
           </button>
         )}

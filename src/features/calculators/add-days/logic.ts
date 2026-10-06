@@ -43,5 +43,5 @@ export function getAddDays(
 /** Human-readable form used by the result panel and copy button. */
 export function describeShift(result: AddDaysResult): string {
   const gap = differenceInDays(result.result, result.from);
-  return `${gap.toLocaleString()} day${gap === 1 ? "" : "s"} later`;
+  return `${gap.toLocaleString("en-US")} day${gap === 1 ? "" : "s"} later`;
 }

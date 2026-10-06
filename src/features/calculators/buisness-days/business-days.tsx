@@ -206,7 +206,7 @@
 // //           {result ? (
 // //             <ResultPanel title="Business days">
 // //               <p className="ticker font-mono text-5xl font-medium tracking-[-.08em] text-foreground">
-// //                 {result.total.toLocaleString()}
+// //                 {result.total.toLocaleString("en-US")}
 // //                 <span className="ml-2 text-2xl text-muted-foreground">
 // //                   days
 // //                 </span>
@@ -258,19 +258,19 @@
 // //             },
 // //             {
 // //               label: "Calendar days",
-// //               value: `${result.calendarDays.toLocaleString()} days`,
+// //               value: `${result.calendarDays.toLocaleString("en-US")} days`,
 // //             },
 // //             {
 // //               label: "Weekend days",
-// //               value: `${result.weekends.toLocaleString()} days`,
+// //               value: `${result.weekends.toLocaleString("en-US")} days`,
 // //             },
 // //             {
 // //               label: "Holidays applied",
-// //               value: `${result.holidaysApplied.toLocaleString()}`,
+// //               value: `${result.holidaysApplied.toLocaleString("en-US")}`,
 // //             },
 // //             {
 // //               label: "Business days",
-// //               value: `${result.total.toLocaleString()} days`,
+// //               value: `${result.total.toLocaleString("en-US")} days`,
 // //             },
 // //           ]}
 // //         />
@@ -527,7 +527,7 @@
 //             <ResultPanel title="Business days">
 //               {/* Fluid typography applied to the big result number */}
 //               <p className="ticker font-mono text-[clamp(36px,8vw,48px)] font-medium tracking-[-.08em] text-foreground">
-//                 {result.total.toLocaleString()}
+//                 {result.total.toLocaleString("en-US")}
 //                 <span className="ml-2 text-[clamp(18px,4vw,24px)] text-muted-foreground">
 //                   days
 //                 </span>
@@ -665,7 +665,7 @@
 //               },
 //               {
 //                 label: "Calendar days",
-//                 value: `${result.calendarDays.toLocaleString()} days`,
+//                 value: `${result.calendarDays.toLocaleString("en-US")} days`,
 //                 bg: "var(--row-days-bg)",
 //                 icon: "var(--row-days-icon)",
 //                 text: "var(--row-days-text)",
@@ -673,7 +673,7 @@
 //               },
 //               {
 //                 label: "Weekend days",
-//                 value: `${result.weekends.toLocaleString()} days`,
+//                 value: `${result.weekends.toLocaleString("en-US")} days`,
 //                 bg: "var(--row-months-bg)",
 //                 icon: "var(--row-months-icon)",
 //                 text: "var(--row-months-text)",
@@ -681,7 +681,7 @@
 //               },
 //               {
 //                 label: "Holidays applied",
-//                 value: `${result.holidaysApplied.toLocaleString()}`,
+//                 value: `${result.holidaysApplied.toLocaleString("en-US")}`,
 //                 bg: "var(--row-weeks-bg)",
 //                 icon: "var(--row-weeks-icon)",
 //                 text: "var(--row-weeks-text)",
@@ -689,7 +689,7 @@
 //               },
 //               {
 //                 label: "Business days",
-//                 value: `${result.total.toLocaleString()} days`,
+//                 value: `${result.total.toLocaleString("en-US")} days`,
 //                 bg: "var(--row-days-bg)",
 //                 icon: "var(--row-days-icon)",
 //                 text: "var(--row-days-text)",
@@ -1066,7 +1066,7 @@ export function BusinessDays() {
           {result ? (
             <ResultPanel title="Business days">
               <p className="ticker font-mono text-[clamp(36px,8vw,48px)] font-medium tracking-[-.08em] text-foreground">
-                {result.total.toLocaleString()}
+                {result.total.toLocaleString("en-US")}
                 <span className="ml-2 text-[clamp(18px,4vw,24px)] text-muted-foreground">
                   days
                 </span>
@@ -1205,7 +1205,7 @@ export function BusinessDays() {
               },
               {
                 label: "Calendar days",
-                value: `${result.calendarDays.toLocaleString()} days`,
+                value: `${result.calendarDays.toLocaleString("en-US")} days`,
                 bg: "var(--row-days-bg)",
                 icon: "var(--row-days-icon)",
                 text: "var(--row-days-text)",
@@ -1213,7 +1213,7 @@ export function BusinessDays() {
               },
               {
                 label: "Weekend days",
-                value: `${result.weekends.toLocaleString()} days`,
+                value: `${result.weekends.toLocaleString("en-US")} days`,
                 bg: "var(--row-months-bg)",
                 icon: "var(--row-months-icon)",
                 text: "var(--row-months-text)",
@@ -1221,7 +1221,7 @@ export function BusinessDays() {
               },
               {
                 label: "Holidays applied",
-                value: `${result.holidaysApplied.toLocaleString()}`,
+                value: `${result.holidaysApplied.toLocaleString("en-US")}`,
                 bg: "var(--row-weeks-bg)",
                 icon: "var(--row-weeks-icon)",
                 text: "var(--row-weeks-text)",
@@ -1229,7 +1229,7 @@ export function BusinessDays() {
               },
               {
                 label: "Business days",
-                value: `${result.total.toLocaleString()} days`,
+                value: `${result.total.toLocaleString("en-US")} days`,
                 bg: "var(--row-days-bg)",
                 icon: "var(--row-days-icon)",
                 text: "var(--row-days-text)",

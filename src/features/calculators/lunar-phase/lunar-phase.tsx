@@ -352,7 +352,7 @@
 //               Distance
 //             </p>
 //             <p className="mt-1 text-[13px] font-bold text-[var(--text-primary)]">
-//               {Math.round(info.distance).toLocaleString()} km
+//               {Math.round(info.distance).toLocaleString("en-US")} km
 //             </p>
 //             <p className="font-mono text-[10px] text-muted-foreground">
 //               {info.distanceEarthRadii.toFixed(2)} Earth radii
@@ -1121,7 +1121,7 @@ function MoonCompass({
               Distance
             </p>
             <p className="mt-1 text-[13px] font-bold text-[var(--text-primary)]">
-              {Math.round(info.distance).toLocaleString()} km
+              {Math.round(info.distance).toLocaleString("en-US")} km
             </p>
             <p className="font-mono text-[10px] text-muted-foreground">
               {info.distanceEarthRadii.toFixed(2)} Earth radii

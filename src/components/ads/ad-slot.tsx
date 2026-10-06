@@ -20,9 +20,9 @@ const LAYOUT: Record<
   { wrapper: string; minHeight: number | string; maxWidth?: string }
 > = {
   top: {
-    wrapper: " w-full", //mx-auto
+    wrapper: " mx-auto w-full", //mx-auto
     minHeight: 90,
-    // maxWidth: "970px",  //centered ad , general ad for the google mostly
+    //maxWidth: "970px",  //centered ad , general ad for the google mostly
   },
   sidebar: {
     wrapper: "w-full",

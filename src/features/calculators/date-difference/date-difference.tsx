@@ -57,11 +57,11 @@
 //       tool: TOOL_SLUG,
 //       toolName: "Date Difference",
 //       signature,
-//       summary: `${diff.totalDays.toLocaleString()} days`,
+//       summary: `${diff.totalDays.toLocaleString("en-US")} days`,
 //       details: {
 //         From: start,
 //         To: end,
-//         "Total days": diff.totalDays.toLocaleString(),
+//         "Total days": diff.totalDays.toLocaleString("en-US"),
 //       },
 //     });
 //     setJustSaved(true);
@@ -130,7 +130,7 @@
 //           {diff ? (
 //             <ResultPanel title="Difference">
 //               <p className="ticker font-mono text-5xl font-medium tracking-[-.08em] text-foreground">
-//                 {diff.totalDays.toLocaleString()}
+//                 {diff.totalDays.toLocaleString("en-US")}
 //                 <span className="ml-2 text-2xl text-muted-foreground">
 //                   days
 //                 </span>
@@ -144,7 +144,7 @@
 //               </p>
 //               <div className="mt-6 flex items-center justify-between border-t border-primary/10 pt-4">
 //                 <span className="text-xs text-muted-foreground">
-//                   {diff.weeks.total.toLocaleString()} weeks +{" "}
+//                   {diff.weeks.total.toLocaleString("en-US")} weeks +{" "}
 //                   {diff.weeks.remainderDays} days
 //                 </span>
 //                 <CopyButton value={`${diff.totalDays} days`} />
@@ -176,19 +176,19 @@
 //             },
 //             {
 //               label: "Total months",
-//               value: `${diff.months.total.toLocaleString()} months and ${
+//               value: `${diff.months.total.toLocaleString("en-US")} months and ${
 //                 diff.months.remainderDays
 //               } day${diff.months.remainderDays === 1 ? "" : "s"}`,
 //             },
 //             {
 //               label: "Total weeks",
-//               value: `${diff.weeks.total.toLocaleString()} weeks and ${
+//               value: `${diff.weeks.total.toLocaleString("en-US")} weeks and ${
 //                 diff.weeks.remainderDays
 //               } day${diff.weeks.remainderDays === 1 ? "" : "s"}`,
 //             },
 //             {
 //               label: "Total days",
-//               value: `${diff.totalDays.toLocaleString()} days`,
+//               value: `${diff.totalDays.toLocaleString("en-US")} days`,
 //             },
 //           ]}
 //         />
@@ -272,11 +272,11 @@ export function DateDifference() {
       tool: TOOL_SLUG,
       toolName: "Date Difference",
       signature,
-      summary: `${diff.totalDays.toLocaleString()} days`,
+      summary: `${diff.totalDays.toLocaleString("en-US")} days`,
       details: {
         From: start,
         To: end,
-        "Total days": diff.totalDays.toLocaleString(),
+        "Total days": diff.totalDays.toLocaleString("en-US"),
       },
     });
     setJustSaved(true);
@@ -293,9 +293,9 @@ export function DateDifference() {
   const getExtraDetails = () => {
     if (!diff) return {};
     return {
-      totalHours: (diff.totalDays * 24).toLocaleString(),
-      totalMinutes: (diff.totalDays * 24 * 60).toLocaleString(),
-      totalSeconds: (diff.totalDays * 24 * 60 * 60).toLocaleString(),
+      totalHours: (diff.totalDays * 24).toLocaleString("en-US"),
+      totalMinutes: (diff.totalDays * 24 * 60).toLocaleString("en-US"),
+      totalSeconds: (diff.totalDays * 24 * 60 * 60).toLocaleString("en-US"),
     };
   };
 
@@ -359,7 +359,7 @@ export function DateDifference() {
             <ResultPanel title="Difference">
               {/* Fluid typography applied to the big result number */}
               <p className="ticker font-mono text-[clamp(36px,8vw,48px)] font-medium tracking-[-.08em] text-foreground">
-                {diff.totalDays.toLocaleString()}
+                {diff.totalDays.toLocaleString("en-US")}
                 <span className="ml-2 text-[clamp(18px,4vw,24px)] text-muted-foreground">
                   days
                 </span>
@@ -375,7 +375,7 @@ export function DateDifference() {
               {/* Added flex-wrap for safe rendering on ultra-small screens */}
               <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-primary/10 pt-4">
                 <span className="text-xs text-muted-foreground">
-                  {diff.weeks.total.toLocaleString()} weeks +{" "}
+                  {diff.weeks.total.toLocaleString("en-US")} weeks +{" "}
                   {diff.weeks.remainderDays} days
                 </span>
                 <CopyButton value={`${diff.totalDays} days`} />
@@ -487,7 +487,7 @@ export function DateDifference() {
               },
               {
                 label: "Total months",
-                value: `${diff.months.total.toLocaleString()} months and ${
+                value: `${diff.months.total.toLocaleString("en-US")} months and ${
                   diff.months.remainderDays
                 } day${diff.months.remainderDays === 1 ? "" : "s"}`,
                 bg: "var(--row-weeks-bg)",
@@ -497,7 +497,7 @@ export function DateDifference() {
               },
               {
                 label: "Total weeks",
-                value: `${diff.weeks.total.toLocaleString()} weeks and ${
+                value: `${diff.weeks.total.toLocaleString("en-US")} weeks and ${
                   diff.weeks.remainderDays
                 } day${diff.weeks.remainderDays === 1 ? "" : "s"}`,
                 bg: "var(--row-days-bg)",
@@ -507,7 +507,7 @@ export function DateDifference() {
               },
               {
                 label: "Total days",
-                value: `${diff.totalDays.toLocaleString()} days`,
+                value: `${diff.totalDays.toLocaleString("en-US")} days`,
                 bg: "var(--row-months-bg)",
                 icon: "var(--row-months-icon)",
                 text: "var(--row-months-text)",

@@ -6,6 +6,6 @@ export function cn(...parts: Array<string | false | null | undefined>) {
 }
 
 export function formatNumber(n: number): string {
-  return n.toLocaleString();
+  return n.toLocaleString("en-US");
 }
 

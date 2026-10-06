@@ -415,7 +415,7 @@ export function TimezoneConverter() {
     
     return {
       weekday: d.toLocaleDateString("en-US", { weekday: "long" }),
-      unix: Math.floor(d.getTime() / 1000).toLocaleString(),
+      unix: Math.floor(d.getTime() / 1000).toLocaleString("en-US"),
       iso: d.toISOString(),
     };
   };

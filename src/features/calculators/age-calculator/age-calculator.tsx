@@ -73,7 +73,7 @@
 //       details: {
 //         "Date of birth": birth,
 //         "Calculated on": asOf,
-//         "Total days": age.totalDays.toLocaleString(),
+//         "Total days": age.totalDays.toLocaleString("en-US"),
 //       },
 //     });
 //     setJustSaved(true);
@@ -315,7 +315,7 @@
 //                     className="font-bold"
 //                     style={{ color: "var(--text-primary)" }}
 //                   >
-//                     {age.totalDays.toLocaleString()}
+//                     {age.totalDays.toLocaleString("en-US")}
 //                   </strong>{" "}
 //                   days
 //                   <br />
@@ -431,7 +431,7 @@
 //             {[
 //               {
 //                 label: "Age in Months",
-//                 value: `${breakdown.months.total.toLocaleString()} months, ${breakdown.months.remainderWeeks} week${breakdown.months.remainderWeeks === 1 ? "" : "s"}, and ${breakdown.months.remainderDays} day${breakdown.months.remainderDays === 1 ? "" : "s"}`,
+//                 value: `${breakdown.months.total.toLocaleString("en-US")} months, ${breakdown.months.remainderWeeks} week${breakdown.months.remainderWeeks === 1 ? "" : "s"}, and ${breakdown.months.remainderDays} day${breakdown.months.remainderDays === 1 ? "" : "s"}`,
 //                 bg: "var(--row-months-bg)",
 //                 icon: "var(--row-months-icon)",
 //                 text: "var(--row-months-text)",
@@ -439,7 +439,7 @@
 //               },
 //               {
 //                 label: "Age in Weeks",
-//                 value: `${breakdown.weeks.total.toLocaleString()} weeks and ${breakdown.weeks.remainderDays} day${breakdown.weeks.remainderDays === 1 ? "" : "s"}`,
+//                 value: `${breakdown.weeks.total.toLocaleString("en-US")} weeks and ${breakdown.weeks.remainderDays} day${breakdown.weeks.remainderDays === 1 ? "" : "s"}`,
 //                 bg: "var(--row-weeks-bg)",
 //                 icon: "var(--row-weeks-icon)",
 //                 text: "var(--row-weeks-text)",
@@ -447,7 +447,7 @@
 //               },
 //               {
 //                 label: "Age in Days",
-//                 value: `${breakdown.days.toLocaleString()} days`,
+//                 value: `${breakdown.days.toLocaleString("en-US")} days`,
 //                 bg: "var(--row-days-bg)",
 //                 icon: "var(--row-days-icon)",
 //                 text: "var(--row-days-text)",
@@ -573,7 +573,7 @@ export function AgeCalculator() {
       details: {
         "Date of birth": birth,
         "Calculated on": asOf,
-        "Total days": age.totalDays.toLocaleString(),
+        "Total days": age.totalDays.toLocaleString("en-US"),
       },
     });
     setJustSaved(true);
@@ -607,9 +607,9 @@ export function AgeCalculator() {
     const dayOfYear = Math.floor((b.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000)) + 1;
     
     return {
-      totalHours: totalHours.toLocaleString(),
-      totalMinutes: totalMinutes.toLocaleString(),
-      totalSeconds: totalSeconds.toLocaleString(),
+      totalHours: totalHours.toLocaleString("en-US"),
+      totalMinutes: totalMinutes.toLocaleString("en-US"),
+      totalSeconds: totalSeconds.toLocaleString("en-US"),
       dayOfYear: `${dayOfYear}`,
       weekdayBorn: b.toLocaleDateString("en-US", { weekday: "long" }),
     };
@@ -840,7 +840,7 @@ export function AgeCalculator() {
                     className="font-bold"
                     style={{ color: "var(--text-primary)" }}
                   >
-                    {age.totalDays.toLocaleString()}
+                    {age.totalDays.toLocaleString("en-US")}
                   </strong>{" "}
                   days
                   <br />
@@ -966,7 +966,7 @@ export function AgeCalculator() {
             {[
               {
                 label: "Age in Months",
-                value: `${breakdown.months.total.toLocaleString()} months, ${breakdown.months.remainderWeeks} week${breakdown.months.remainderWeeks === 1 ? "" : "s"}, and ${breakdown.months.remainderDays} day${breakdown.months.remainderDays === 1 ? "" : "s"}`,
+                value: `${breakdown.months.total.toLocaleString("en-US")} months, ${breakdown.months.remainderWeeks} week${breakdown.months.remainderWeeks === 1 ? "" : "s"}, and ${breakdown.months.remainderDays} day${breakdown.months.remainderDays === 1 ? "" : "s"}`,
                 bg: "var(--row-months-bg)",
                 icon: "var(--row-months-icon)",
                 text: "var(--row-months-text)",
@@ -974,7 +974,7 @@ export function AgeCalculator() {
               },
               {
                 label: "Age in Weeks",
-                value: `${breakdown.weeks.total.toLocaleString()} weeks and ${breakdown.weeks.remainderDays} day${breakdown.weeks.remainderDays === 1 ? "" : "s"}`,
+                value: `${breakdown.weeks.total.toLocaleString("en-US")} weeks and ${breakdown.weeks.remainderDays} day${breakdown.weeks.remainderDays === 1 ? "" : "s"}`,
                 bg: "var(--row-weeks-bg)",
                 icon: "var(--row-weeks-icon)",
                 text: "var(--row-weeks-text)",
@@ -982,7 +982,7 @@ export function AgeCalculator() {
               },
               {
                 label: "Age in Days",
-                value: `${breakdown.days.toLocaleString()} days`,
+                value: `${breakdown.days.toLocaleString("en-US")} days`,
                 bg: "var(--row-days-bg)",
                 icon: "var(--row-days-icon)",
                 text: "var(--row-days-text)",

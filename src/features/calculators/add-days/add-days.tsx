@@ -154,7 +154,7 @@
 //               </p>
 //               <div className="mt-6 flex items-center justify-between border-t border-primary/10 pt-4">
 //                 <span className="text-xs text-muted-foreground">
-//                   +{result.amount.toLocaleString()} day
+//                   +{result.amount.toLocaleString("en-US")} day
 //                   {result.amount === 1 ? "" : "s"}
 //                 </span>
 //                 <CopyButton value={result.result.toISOString().slice(0, 10)} />
@@ -185,7 +185,7 @@
 //             },
 //             {
 //               label: "Days added",
-//               value: `${result.amount.toLocaleString()} day${
+//               value: `${result.amount.toLocaleString("en-US")} day${
 //                 result.amount === 1 ? "" : "s"
 //               }`,
 //             },
@@ -317,7 +317,7 @@ export function AddDays() {
     return {
       dayOfYear: `${dayOfYear} of ${totalDaysInYear}`,
       weekNumber: `Week ${Math.ceil(dayOfYear / 7)}`,
-      unix: Math.floor(d.getTime() / 1000).toLocaleString(),
+      unix: Math.floor(d.getTime() / 1000).toLocaleString("en-US"),
       iso: d.toISOString().slice(0, 10),
     };
   };
@@ -401,7 +401,7 @@ export function AddDays() {
               </p>
               <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-primary/10 pt-4">
                 <span className="text-xs text-muted-foreground">
-                  +{result.amount.toLocaleString()} day
+                  +{result.amount.toLocaleString("en-US")} day
                   {result.amount === 1 ? "" : "s"}
                 </span>
                 <CopyButton value={result.result.toISOString().slice(0, 10)} />
@@ -512,7 +512,7 @@ export function AddDays() {
               },
               {
                 label: "Days added",
-                value: `${result.amount.toLocaleString()} day${
+                value: `${result.amount.toLocaleString("en-US")} day${
                   result.amount === 1 ? "" : "s"
                 }`,
                 bg: "var(--row-weeks-bg)",
