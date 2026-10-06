@@ -16,7 +16,7 @@ export type CalculatorKey =
   | "world-clock"
   | "week-number"
   | "calendar"
-  |"sunrise-sunset"
+  | "sunrise-sunset"
   | "festival-calendar"
   | "fiscal-quarter"
   | "date-range"

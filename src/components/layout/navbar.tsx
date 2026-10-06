@@ -1,196 +1,217 @@
-// // components/layout/navbar.tsx
-// "use client";
-
-// import { History, Menu, Moon, Sun } from "lucide-react";
-// import { AccountMenu } from "./account-menu";
-// import { SearchBar } from "./search-bar";
-// import { useHistory } from "@/components/history/history-context";
-// import { useTheme } from "./theme-toggle";
-// import { cn } from "@/lib/utils";
-
-// interface NavbarProps {
-//   onMenuClick: () => void;
-//   user: { email: string; name?: string } | null;
-//   onAuthSuccess: (u: { email: string; name?: string }) => void;
-//   onLogout: () => void;
-// }
-
-// function CircleButton({
-//   children,
-//   label,
-//   onClick,
-//   badge,
-//   className,
-// }: {
-//   children: React.ReactNode;
-//   label: string;
-//   onClick?: () => void;
-//   badge?: number;
-//   className?: string;
-// }) {
-//   return (
-//     <button
-//       type="button"
-//       onClick={onClick}
-//       aria-label={label}
-//       className={cn(
-//         "nav-icon-btn relative grid size-11 shrink-0 place-items-center rounded-full",
-//         className
-//       )}
-//     >
-//       {children}
-//       {badge !== undefined && badge > 0 && (
-//         <span
-//           className="absolute -right-0.5 -top-0.5 grid min-w-[18px] place-items-center rounded-full px-1 font-mono text-[9px] font-bold text-white ring-2"
-//           style={{
-//             backgroundColor: "var(--accent-bright)",
-//             // @ts-expect-error css var for ring
-//             "--tw-ring-color": "var(--surface-navbar)",
-//           }}
-//         >
-//           {badge > 9 ? "9+" : badge}
-//         </span>
-//       )}
-//     </button>
-//   );
-// }
-
-// export function Navbar({
-//   onMenuClick,
-//   user,
-//   onAuthSuccess,
-//   onLogout,
-// }: NavbarProps) {
-//   const { open, entries } = useHistory();
-//   const { dark, toggle } = useTheme();
-
-//   return (
-//     <div className="sticky top-1 z-20 px-3 sm:px-4">
-//       <header
-//         className={cn(
-//           "surface-navbar flex flex-col gap-3 rounded-[30px] px-4 py-2.5",
-//           "sm:h-[72px] sm:flex-row sm:items-center sm:gap-4 sm:py-0 lg:gap-5"
-//         )}
-//       >
-//         {/* --------------------------------------------------------- */}
-//         {/* Row 1 (mobile/tablet) / Left: brand + search              */}
-//         {/* --------------------------------------------------------- */}
-//         <div className="flex min-w-0 flex-1 items-center gap-3">
-//           {/* Hamburger — visible below 1444px */}
-//           <button
-//             type="button"
-//             onClick={onMenuClick}
-//             aria-label="Open menu"
-//             className="grid size-12 shrink-0 place-items-center rounded-full sm:size-11 min-[1444px]:hidden"
-//             style={{
-//               backgroundColor: "var(--surface-card)",
-//               color: "var(--purple)",
-//               border: "1px solid var(--border-soft)",
-//             }}
-//           >
-//             <Menu className="size-5 sm:size-[18px]" />
-//           </button>
-
-//           {/* Brand logo — desktop only (≥1444px) */}
-//           <span
-//             className="hidden size-[40px] shrink-0 place-items-center rounded-2xl min-[1444px]:grid"
-//             style={{
-//               backgroundColor: "#F4F3FF",
-//               boxShadow:
-//                 "0 4px 14px rgba(106,85,255,0.25), inset 0 1px 0 rgba(255,255,255,0.95)",
-//             }}
-//           >
-//             {/* eslint-disable-next-line @next/next/no-img-element */}
-//             <img
-//               src="/brand-logo.png"
-//               alt="Date & Time logo"
-//               draggable={false}
-//               className="size-full select-none object-contain p-[2px]"
-//             />
-//           </span>
-
-//           {/* Brand text — desktop only (≥1444px) */}
-//           <p
-//             className="hidden shrink-0 truncate text-[19px] font-bold leading-tight tracking-[-.02em] min-[1444px]:block"
-//             style={{ color: "var(--text-primary)" }}
-//           >
-//             Date &amp; Time
-//           </p>
-
-//           {/* Search */}
-//           <div className="flex min-w-0 flex-1 justify-start">
-//             <SearchBar />
-//           </div>
-
-//           {/* Mobile + tablet inline: History + Account (below 1444px) */}
-//           <div className="flex items-center gap-2 min-[1444px]:hidden">
-//             <CircleButton
-//               label="History"
-//               onClick={open}
-//               badge={entries.length}
-//             >
-//               <History size={17} />
-//             </CircleButton>
-//             <AccountMenu
-//               user={user}
-//               onAuthSuccess={onAuthSuccess}
-//               onLogout={onLogout}
-//             />
-//           </div>
-//         </div>
-
-//         {/* --------------------------------------------------------- */}
-//         {/* Right controls — desktop only (≥1444px)                    */}
-//         {/* --------------------------------------------------------- */}
-//         <div className="hidden shrink-0 items-center gap-2 min-[1444px]:flex">
-//           <button
-//             type="button"
-//             onClick={toggle}
-//             aria-label="Toggle theme"
-//             className={cn(
-//               "nav-icon-btn relative grid size-11 shrink-0 place-items-center rounded-full",
-//               dark && "nav-icon-btn--active"
-//             )}
-//           >
-//             {dark ? <Sun size={17} /> : <Moon size={17} />}
-//           </button>
-
-//           <CircleButton label="History" onClick={open} badge={entries.length}>
-//             <History size={17} />
-//           </CircleButton>
-
-//           <AccountMenu
-//             user={user}
-//             onAuthSuccess={onAuthSuccess}
-//             onLogout={onLogout}
-//           />
-//         </div>
-//       </header>
-//     </div>
-//   );
-// }
-
-// components/layout/navbar.tsx
+// src/components/layout/navbar.tsx
 "use client";
 
-import { History, Menu, Moon, Sun } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { ChevronDown, Clock, History, Menu, Search, X } from "lucide-react";
 import { AccountMenu } from "./account-menu";
-import { SearchBar } from "./search-bar";
 import { useHistory } from "@/components/history/history-context";
-import { useTheme } from "./theme-toggle";
+import { getToolsByCategory, TOOLS } from "@/config/tools";
 import { cn } from "@/lib/utils";
 
 interface NavbarProps {
-  onMenuClick: () => void;
   user: { email: string; name?: string } | null;
   onAuthSuccess: (u: { email: string; name?: string }) => void;
   onLogout: () => void;
+  onOpenAllTools: () => void;
+}
+
+const CATEGORY_META: Record<
+  string,
+  { label: string; promoTitle: string; promoBody: string }
+> = {
+  dates: {
+    label: "Date Calculations",
+    promoTitle: "Every date, one click away",
+    promoBody: "Add, subtract, count, and compare dates instantly.",
+  },
+  time: {
+    label: "Time",
+    promoTitle: "Time, measured simply",
+    promoBody: "Timers, stopwatches, and duration tools for any task.",
+  },
+  timezone: {
+    label: "Time & Place",
+    promoTitle: "Time connects our world",
+    promoBody: "Explore, compare, and plan time across different places.",
+  },
+  timers: {
+    label: "Timers",
+    promoTitle: "Never miss a moment",
+    promoBody: "Count down, up, and track time your way.",
+  },
+};
+
+/* ------------------------------------------------------------------ */
+/*  Category trigger (button only — panel lives separately)           */
+/* ------------------------------------------------------------------ */
+function NavTrigger({
+  category,
+  active,
+  open,
+  onEnter,
+  onLeave,
+}: {
+  category: string;
+  active: boolean;
+  open: boolean;
+  onEnter: () => void;
+  onLeave: () => void;
+}) {
+  const meta = CATEGORY_META[category] ?? { label: category };
+
+  return (
+    <button
+      type="button"
+      aria-haspopup="true"
+      aria-expanded={open}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      onFocus={onEnter}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-semibold text-white/90 transition",
+        "hover:bg-white/10 hover:text-white",
+        (open || active) && "bg-white/12 text-white",
+      )}
+    >
+      {meta.label}
+      <ChevronDown
+        size={13}
+        className={cn(
+          "transition-transform duration-150",
+          open && "rotate-180",
+        )}
+      />
+    </button>
+  );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Round control used in desktop right-side                          */
+/*  Shared dropdown panel — anchored to the nav's left edge           */
 /* ------------------------------------------------------------------ */
-function CircleButton({
+function NavPanel({
+  category,
+  tools,
+  onEnter,
+  onLeave,
+}: {
+  category: string;
+  tools: {
+    slug: string;
+    name: string;
+    description: string;
+    icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
+  }[];
+  onEnter: () => void;
+  onLeave: () => void;
+}) {
+  const meta = CATEGORY_META[category] ?? {
+    label: category,
+    promoTitle: "Explore tools",
+    promoBody: "Find the right tool for the job.",
+  };
+
+  return (
+    <div
+      className="absolute left-0 top-full z-50 pt-2"
+      style={{ width: "min(720px, calc(100vw - 32px))" }}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+    >
+      <div
+        className="overflow-hidden rounded-2xl border bg-white shadow-2xl"
+        style={{ borderColor: "var(--border-card)" }}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_240px]">
+          {/* LEFT — tools */}
+          <div className="p-5">
+            <p
+              className="mb-3 text-[10px] font-bold uppercase tracking-[.18em]"
+              style={{ color: "var(--purple)" }}
+            >
+              {meta.label} tools
+            </p>
+            <ul className="grid grid-cols-1 gap-0.5 sm:grid-cols-2">
+              {tools.map((tool) => {
+                const Icon = tool.icon;
+                return (
+                  <li key={tool.slug}>
+                    <Link
+                      href={`/tools/${tool.slug}`}
+                      className="group flex items-start gap-3 rounded-xl p-2.5 transition hover:bg-[var(--purple-light)]"
+                    >
+                      <span
+                        className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg transition"
+                        style={{
+                          backgroundColor: "var(--purple-light)",
+                          color: "var(--purple)",
+                        }}
+                      >
+                        <Icon size={16} strokeWidth={2} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span
+                          className="block truncate text-[13px] font-bold"
+                          style={{ color: "var(--text-primary)" }}
+                        >
+                          {tool.name}
+                        </span>
+                        <span
+                          className="mt-0.5 block truncate text-[11px]"
+                          style={{ color: "var(--text-muted)" }}
+                        >
+                          {tool.description}
+                        </span>
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {/* RIGHT — promo panel */}
+          <div
+            className="relative hidden flex-col justify-center gap-3 p-6 md:flex"
+            style={{
+              background: "linear-gradient(160deg, #dff0eb 0%, #c9e6dd 100%)",
+            }}
+          >
+            <div className="relative mx-auto mb-1 grid size-20 place-items-center">
+              <div
+                className="absolute inset-0 rounded-full opacity-70"
+                style={{ backgroundColor: "#a8d5c8" }}
+              />
+              <div className="relative grid size-12 place-items-center rounded-full bg-white shadow-sm">
+                <Clock size={22} style={{ color: "var(--purple)" }} />
+              </div>
+              <span className="absolute -left-1 top-2 size-3 rounded-full bg-white/80" />
+              <span className="absolute -right-2 bottom-2 size-2.5 rounded-full bg-white/80" />
+            </div>
+            <p
+              className="text-center text-[14px] font-extrabold leading-snug tracking-[-.01em]"
+              style={{ color: "#0e4a42" }}
+            >
+              {meta.promoTitle}
+            </p>
+            <p
+              className="text-center text-[11.5px] leading-relaxed"
+              style={{ color: "#2c6157" }}
+            >
+              {meta.promoBody}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Round icon control (dark navbar variant)                          */
+/* ------------------------------------------------------------------ */
+function NavIcon({
   children,
   label,
   onClick,
@@ -206,17 +227,13 @@ function CircleButton({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="nav-icon-btn relative grid size-11 shrink-0 place-items-center rounded-full"
+      className="relative grid size-9 shrink-0 place-items-center rounded-full text-white/90 transition hover:bg-white/12 hover:text-white"
     >
       {children}
       {badge !== undefined && badge > 0 && (
         <span
-          className="absolute -right-0.5 -top-0.5 grid min-w-[18px] place-items-center rounded-full px-1 font-mono text-[9px] font-bold text-white ring-2"
-          style={{
-            backgroundColor: "var(--accent-bright)",
-            // @ts-expect-error css var for ring
-            "--tw-ring-color": "var(--surface-navbar)",
-          }}
+          className="absolute -right-0.5 -top-0.5 grid min-w-[16px] place-items-center rounded-full px-1 font-mono text-[9px] font-bold text-white"
+          style={{ backgroundColor: "#14a08a" }}
         >
           {badge > 9 ? "9+" : badge}
         </span>
@@ -225,132 +242,379 @@ function CircleButton({
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  WORKING SEARCH — filters tools, shows dropdown, navigates         */
+/* ------------------------------------------------------------------ */
+function InlineSearch() {
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return TOOLS.filter((tool) => {
+      const haystack =
+        `${tool.name} ${tool.description} ${tool.category}`.toLowerCase();
+      return haystack.includes(q);
+    }).slice(0, 8);
+  }, [query]);
+
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const handleChange = (value: string) => {
+    setQuery(value);
+    setActiveIndex(0);
+    setOpen(true);
+  };
+
+  const go = (slug: string) => {
+    setQuery("");
+    setOpen(false);
+    setActiveIndex(0);
+    inputRef.current?.blur();
+    router.push(`/tools/${slug}`);
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Escape") {
+      if (open) {
+        e.preventDefault();
+        setOpen(false);
+      } else {
+        inputRef.current?.blur();
+      }
+      return;
+    }
+
+    if (!query.trim() || results.length === 0) {
+      if (e.key === "Enter") inputRef.current?.blur();
+      return;
+    }
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setOpen(true);
+      setActiveIndex((i) => (i + 1) % results.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setOpen(true);
+      setActiveIndex((i) => (i - 1 + results.length) % results.length);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      go(results[activeIndex].slug);
+    }
+  };
+
+  const showDropdown = open && query.trim().length > 0;
+  const activeSlug = results[activeIndex]?.slug;
+
+  return (
+    <div ref={containerRef} className="relative w-full">
+      <Search
+        size={15}
+        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+      />
+      <input
+        ref={inputRef}
+        type="text"
+        role="combobox"
+        value={query}
+        onChange={(e) => handleChange(e.target.value)}
+        onFocus={() => query.trim() && setOpen(true)}
+        onKeyDown={onKeyDown}
+        placeholder="Search tools, cities, time zones..."
+        aria-label="Search"
+        aria-autocomplete="list"
+        aria-expanded={showDropdown}
+        aria-controls="navbar-search-results"
+        aria-activedescendant={
+          showDropdown && activeSlug
+            ? `navbar-search-option-${activeSlug}`
+            : undefined
+        }
+        autoComplete="off"
+        className="h-10 w-full rounded-full border border-white/10 bg-white pl-10 pr-20 text-[13px] text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-white/40 focus:ring-2 focus:ring-white/15"
+      />
+
+      {query ? (
+        <button
+          type="button"
+          onClick={() => {
+            setQuery("");
+            setOpen(false);
+            inputRef.current?.focus();
+          }}
+          aria-label="Clear search"
+          className="absolute right-3 top-1/2 grid size-6 -translate-y-1/2 place-items-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+        >
+          <X size={13} />
+        </button>
+      ) : (
+        <span className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[10px] font-medium text-slate-500 sm:block">
+          Ctrl K
+        </span>
+      )}
+
+      {showDropdown && (
+        <div className="absolute left-0 right-0 top-full z-[60] mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+          {results.length === 0 ? (
+            <div className="p-4 text-[13px] text-slate-500">
+              No tools match{" "}
+              <strong className="text-slate-800">&ldquo;{query}&rdquo;</strong>.
+            </div>
+          ) : (
+            <ul
+              id="navbar-search-results"
+              role="listbox"
+              className="max-h-80 overflow-y-auto p-1.5"
+            >
+              {results.map((tool, i) => {
+                const Icon = tool.icon;
+                const active = i === activeIndex;
+                return (
+                  <li
+                    key={tool.slug}
+                    id={`navbar-search-option-${tool.slug}`}
+                    role="option"
+                    aria-selected={active}
+                  >
+                    <button
+                      type="button"
+                      onMouseEnter={() => setActiveIndex(i)}
+                      onClick={() => go(tool.slug)}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition",
+                        active
+                          ? "bg-[var(--purple-light)]"
+                          : "hover:bg-[var(--purple-light)]",
+                      )}
+                    >
+                      <span
+                        className="grid size-8 shrink-0 place-items-center rounded-lg transition"
+                        style={
+                          active
+                            ? {
+                                backgroundColor: "var(--purple)",
+                                color: "#FFFFFF",
+                              }
+                            : {
+                                backgroundColor: "var(--purple-light)",
+                                color: "var(--purple)",
+                              }
+                        }
+                      >
+                        <Icon size={15} strokeWidth={1.9} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span
+                          className="block truncate text-[13px] font-bold"
+                          style={{ color: "var(--text-primary)" }}
+                        >
+                          {tool.name}
+                        </span>
+                        <span
+                          className="block truncate text-[11px]"
+                          style={{ color: "var(--text-muted)" }}
+                        >
+                          {tool.description}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          {results.length > 0 && (
+            <div className="flex items-center justify-between border-t border-slate-100 px-3 py-2 font-mono text-[10px] uppercase tracking-[.18em] text-slate-400">
+              <span>↑ ↓ navigate</span>
+              <span>↵ open</span>
+              <span>esc close</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Main navbar                                                       */
+/* ------------------------------------------------------------------ */
 export function Navbar({
-  onMenuClick,
   user,
   onAuthSuccess,
   onLogout,
+  onOpenAllTools,
 }: NavbarProps) {
+  const pathname = usePathname();
   const { open, entries } = useHistory();
-  const { dark, toggle } = useTheme();
+
+  const [openState, setOpenState] = useState<{
+    cat: string;
+    path: string;
+  } | null>(null);
+  const openCategory =
+    openState && openState.path === pathname ? openState.cat : null;
+
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const closeTimer = useRef<number | null>(null);
+
+  const groups = getToolsByCategory();
+  const categories = Object.keys(groups);
+
+  const handleEnter = (cat: string) => {
+    if (closeTimer.current) window.clearTimeout(closeTimer.current);
+    setOpenState({ cat, path: pathname });
+  };
+  const handleLeave = () => {
+    if (closeTimer.current) window.clearTimeout(closeTimer.current);
+    closeTimer.current = window.setTimeout(() => setOpenState(null), 120);
+  };
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpenState(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
-    <div className="sticky top-1 z-20 px-3 sm:px-4">
-      <header
-        className={cn(
-          // Mobile/tablet: stacked rows inside one rounded card
-          "flex flex-col gap-3 rounded-[24px] px-3 py-3",
-          // Desktop (1444px+): single row
-          "min-[1444px]:h-[72px] min-[1444px]:flex-row min-[1444px]:items-center min-[1444px]:gap-5 min-[1444px]:rounded-[30px] min-[1444px]:px-4 min-[1444px]:py-0"
-        )}
-        style={{
-          // Explicit border + surface so it never disappears on mobile
-          backgroundColor: "var(--surface-navbar)",
-          border: "1px solid var(--border-navbar)",
-          boxShadow: "var(--shadow-navbar)",
-        }}
-      >
-        {/* ============================================================ */}
-        {/* ROW 1 — Brand + Mobile controls                               */}
-        {/* ============================================================ */}
-        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
-          {/* Hamburger — below 1444px */}
+    <div
+      className="sticky top-0 z-40 w-full"
+      style={{ backgroundColor: "var(--navbar-bg)" }}
+    >
+      <div className="relative mx-auto max-w-[1600px] px-3 sm:px-4">
+        <header
+          className="flex items-center gap-3"
+          style={{ height: "var(--navbar-h)" }}
+        >
+          {/* ---------- Mobile hamburger ---------- */}
           <button
             type="button"
-            onClick={onMenuClick}
+            onClick={onOpenAllTools}
             aria-label="Open menu"
-            className="grid size-10 shrink-0 place-items-center rounded-full min-[1444px]:hidden"
-            style={{
-              backgroundColor: "var(--surface-card)",
-              color: "var(--purple)",
-              border: "1px solid var(--border-soft)",
-            }}
+            className="grid size-9 shrink-0 place-items-center rounded-full text-white/90 transition hover:bg-white/12 hover:text-white lg:hidden"
           >
             <Menu size={18} />
           </button>
 
-          {/* Brand logo */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/brand-logo.png"
-            alt="Date & Time"
-            draggable={false}
-            className="size-10 shrink-0 select-none object-contain"
-          />
-
-          {/* Brand text */}
-          <div className="min-w-0 flex-1">
-            <p
-              className="truncate text-[15px] font-extrabold leading-tight tracking-[-.02em]"
-              style={{ color: "var(--text-primary)" }}
-            >
+          {/* ---------- Brand ---------- */}
+          <Link href="/" className="flex shrink-0 items-center gap-2.5">
+            <span className="grid size-9 place-items-center rounded-full bg-white">
+              <Clock
+                size={18}
+                style={{ color: "var(--purple)" }}
+                strokeWidth={2.4}
+              />
+            </span>
+            <span className="text-[15px] font-extrabold leading-tight tracking-[-.01em] text-white sm:text-[16px]">
               Date &amp; Time
-            </p>
-            <p
-              className="truncate text-[11px] leading-tight"
-              style={{ color: "var(--text-muted)" }}
-            >
-              All your date &amp; time tools
-            </p>
+            </span>
+          </Link>
+
+          {/* ---------- Desktop nav with dropdowns ---------- */}
+          <nav
+            className="relative ml-3 hidden min-w-0 items-center gap-0.5 lg:flex"
+            onMouseLeave={handleLeave}
+          >
+            {categories.map((cat) => {
+              const active = (groups[cat] as { slug: string }[]).some(
+                (t) => pathname === `/tools/${t.slug}`,
+              );
+              return (
+                <NavTrigger
+                  key={cat}
+                  category={cat}
+                  active={active}
+                  open={openCategory === cat}
+                  onEnter={() => handleEnter(cat)}
+                  onLeave={handleLeave}
+                />
+              );
+            })}
+
+            {openCategory && (
+              <NavPanel
+                category={openCategory}
+                tools={groups[openCategory] as never}
+                onEnter={() => handleEnter(openCategory)}
+                onLeave={handleLeave}
+              />
+            )}
+          </nav>
+
+          {/* ---------- Desktop inline search ---------- */}
+          <div className="ml-auto hidden min-w-0 max-w-[440px] flex-1 lg:block">
+            <InlineSearch />
           </div>
 
-          {/* Single theme toggle — below 1444px */}
+          {/* ---------- Mobile search icon toggle ---------- */}
           <button
             type="button"
-            onClick={toggle}
-            aria-label="Toggle theme"
-            className={cn(
-              "nav-icon-btn grid size-10 shrink-0 place-items-center rounded-full min-[1444px]:hidden",
-              dark && "nav-icon-btn--active"
-            )}
+            onClick={() => setMobileSearchOpen((v) => !v)}
+            aria-label="Search"
+            className="ml-auto grid size-9 shrink-0 place-items-center rounded-full text-white/90 transition hover:bg-white/12 hover:text-white lg:hidden"
           >
-            {dark ? <Sun size={16} /> : <Moon size={16} />}
+            {mobileSearchOpen ? <X size={16} /> : <Search size={16} />}
           </button>
 
-          {/* Account — below 1444px */}
-          <div className="flex shrink-0 min-[1444px]:hidden">
+          {/* ---------- Right controls ---------- */}
+          <div className="ml-1 flex shrink-0 items-center gap-1.5">
+            {/* History — desktop only */}
+            <div className="hidden lg:block">
+              <NavIcon label="History" onClick={open} badge={entries.length}>
+                <History size={16} />
+              </NavIcon>
+            </div>
+
+            {/* Account menu */}
             <AccountMenu
               user={user}
               onAuthSuccess={onAuthSuccess}
               onLogout={onLogout}
             />
           </div>
+        </header>
+      </div>
+
+      {/* ---------- Mobile search overlay ---------- */}
+      {mobileSearchOpen && (
+        <div className="relative px-3 pb-3 lg:hidden">
+          <div className="mx-auto max-w-[1600px]">
+            <InlineSearch />
+          </div>
         </div>
-
-        {/* ============================================================ */}
-        {/* ROW 2 — Search bar                                            */}
-        {/* ============================================================ */}
-        <div className="w-full min-w-0 min-[1444px]:flex-1">
-          <SearchBar />
-        </div>
-
-        {/* ============================================================ */}
-        {/* Desktop-only right controls (1444px+)                         */}
-        {/* ============================================================ */}
-        <div className="hidden shrink-0 items-center gap-2 min-[1444px]:flex">
-          <button
-            type="button"
-            onClick={toggle}
-            aria-label="Toggle theme"
-            className={cn(
-              "nav-icon-btn relative grid size-11 shrink-0 place-items-center rounded-full",
-              dark && "nav-icon-btn--active"
-            )}
-          >
-            {dark ? <Sun size={17} /> : <Moon size={17} />}
-          </button>
-
-          <CircleButton label="History" onClick={open} badge={entries.length}>
-            <History size={17} />
-          </CircleButton>
-
-          <AccountMenu
-            user={user}
-            onAuthSuccess={onAuthSuccess}
-            onLogout={onLogout}
-          />
-        </div>
-      </header>
+      )}
     </div>
   );
 }

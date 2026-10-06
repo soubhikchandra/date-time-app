@@ -1,15 +1,13 @@
+// src/components/layout/account-menu.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
 import {
   Activity as ActivityIcon,
   LogOut,
-  Moon,
-  Sun,
   User,
   UserPlus,
 } from "lucide-react";
-import { useTheme } from "./theme-toggle";
 import { AuthModal } from "../auth/auth-modal";
 import { ActivityModal } from "./activity-modal";
 
@@ -41,9 +39,7 @@ export function AccountMenu({ user, onAuthSuccess, onLogout }: AccountMenuProps)
   const [activityOpen, setActivityOpen] = useState(false);
   const [profile, setProfile] = useState<AccountUser | null>(null);
   const ref = useRef<HTMLDivElement>(null);
-  const { dark, toggle } = useTheme();
 
-  // Close dropdown on outside click
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -54,7 +50,6 @@ export function AccountMenu({ user, onAuthSuccess, onLogout }: AccountMenuProps)
     return () => document.removeEventListener("mousedown", onDown);
   }, []);
 
-  // Fetch full profile when opening the dropdown
   useEffect(() => {
     if (!open || !user) return;
     fetch("/api/auth/me", { credentials: "same-origin", cache: "no-store" })
@@ -81,29 +76,28 @@ export function AccountMenu({ user, onAuthSuccess, onLogout }: AccountMenuProps)
 
   return (
     <div ref={ref} className="relative">
-      {/* Single account icon — always visible */}
-<button
-  type="button"
-  onClick={() => setOpen((v) => !v)}
-  aria-label="Account"
-  aria-expanded={open}
-  className="grid size-10 shrink-0 place-items-center rounded-full bg-[#554CC4] text-white shadow-[0_2px_6px_rgba(85,76,196,0.28)] transition-colors duration-200 hover:brightness-110"
->
-  {user ? (
-    <span className="text-[13px] font-bold">
-      {initial}
-    </span>
-  ) : (
-    <User size={16} />
-  )}
-</button>
+      {/* Account icon — dark-navbar variant */}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Account"
+        aria-expanded={open}
+        className="grid size-9 shrink-0 place-items-center rounded-full text-white transition hover:brightness-110"
+        // style={{ backgroundColor: "rgba(255,255,255,0.14)" }}
+        style={{ backgroundColor: "var(--navbar-active-bg)" }}
+      >
+        {user ? (
+          <span className="text-[12px] font-bold">{initial}</span>
+        ) : (
+          <User size={16} />
+        )}
+      </button>
 
       {/* Dropdown */}
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-60 overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
           {user ? (
             <>
-              {/* Profile header */}
               <div className="border-b border-border px-4 py-3">
                 <p className="truncate text-sm font-bold text-foreground">
                   {profile?.name || user.name || "—"}
@@ -114,7 +108,6 @@ export function AccountMenu({ user, onAuthSuccess, onLogout }: AccountMenuProps)
               </div>
 
               <div className="space-y-1 p-2">
-                {/* Activity */}
                 <button
                   type="button"
                   onClick={openActivity}
@@ -124,17 +117,6 @@ export function AccountMenu({ user, onAuthSuccess, onLogout }: AccountMenuProps)
                   View activity
                 </button>
 
-                {/* Dark mode */}
-                <button
-                  type="button"
-                  onClick={toggle}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                >
-                  {dark ? <Sun size={15} /> : <Moon size={15} />}
-                  {dark ? "Light mode" : "Dark mode"}
-                </button>
-
-                {/* Sign out */}
                 <button
                   type="button"
                   onClick={() => {
@@ -150,7 +132,6 @@ export function AccountMenu({ user, onAuthSuccess, onLogout }: AccountMenuProps)
             </>
           ) : (
             <div className="space-y-1 p-2">
-              {/* Register — opens modal in signup mode; modal has Sign-in toggle */}
               <button
                 type="button"
                 onClick={openAuth}
@@ -159,22 +140,11 @@ export function AccountMenu({ user, onAuthSuccess, onLogout }: AccountMenuProps)
                 <UserPlus size={15} />
                 Register
               </button>
-
-              {/* Dark mode */}
-              <button
-                type="button"
-                onClick={toggle}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
-              >
-                {dark ? <Sun size={15} /> : <Moon size={15} />}
-                {dark ? "Light mode" : "Dark mode"}
-              </button>
             </div>
           )}
         </div>
       )}
 
-      {/* Auth modal — centered, portal */}
       <AuthModal
         key={authMode}
         isOpen={authOpen}
@@ -186,7 +156,6 @@ export function AccountMenu({ user, onAuthSuccess, onLogout }: AccountMenuProps)
         }}
       />
 
-      {/* Activity modal — centered, portal */}
       <ActivityModal
         isOpen={activityOpen}
         activities={profile?.activities ?? []}
@@ -195,4 +164,3 @@ export function AccountMenu({ user, onAuthSuccess, onLogout }: AccountMenuProps)
     </div>
   );
 }
-
