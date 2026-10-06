@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { getToolsByCategory, TOOLS } from "@/config/tools";
 import { AdSlot } from "@/components/ads/ad-slot";
+import { LocalTimeStrip } from "./local-time-strip";
 
 interface CalculatorLayoutProps {
   title: string;
@@ -152,6 +153,13 @@ export function CalculatorLayout({
       <div className="mx-auto max-w-[1600px] px-3 pt-5 sm:px-4">
         <AdSlot type="top" />
       </div>
+
+      {/* ============================================================ */}
+{/* LOCAL TIME STRIP — NEW                                       */}
+{/* ============================================================ */}
+<div className="mx-auto mt-4 max-w-[1400px] px-4 sm:px-5">
+  <LocalTimeStrip />
+</div>
 
       {/* ============================================================ */}
       {/* PAGE CONTENT                                                 */}
