@@ -2,8 +2,7 @@
 /*  REQUIRED — do not remove                                          */
 /* ================================================================== */
 @import "tailwindcss";
-@custom-variant dark (&:is(.dark *));   /* ← KEEP: components use dark: */
-                                         /*    classes that need to parse */
+@custom-variant dark (&:is(.dark *));   /* KEEP: components still use dark: */
 
 @theme inline {
   --color-background: hsl(var(--background));
@@ -419,5 +418,33 @@ input[type="week"] {
   background: var(--text-muted);
 }
 .category-scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ================================================================== */
+/*  Tool category list — vertical scroll for overflow                  */
+/* ================================================================== */
+.tool-category-scroll {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-input) transparent;
+}
+.tool-category-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 0;
+}
+.tool-category-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.tool-category-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-input);
+  border-radius: 999px;
+}
+.tool-category-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+.tool-category-scroll::-webkit-scrollbar-corner {
   background: transparent;
 }
