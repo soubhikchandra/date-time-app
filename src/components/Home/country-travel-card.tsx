@@ -19,22 +19,18 @@ import { formatInTimeZone } from "date-fns-tz";
 import * as SunCalc from "suncalc";
 import { getWeekendDays, isWeekend } from "country-weekends";
 import * as noaaGfs from "noaa-gfs-js";
-import type { CountryData } from "@/lib/country-data";   // ← ADD THIS
-
-/* ---- DELETE the local interface CountryData { ... } ---- */
+import type { CountryData } from "@/lib/country-data";
 
 interface WeatherData {
   temp: number;
   condition: string;
   icon: string;
-  iconKind: "emoji" | "url";
+  iconKind: "emoji" | "url" | "none";
   high: number;
   low: number;
   wind: number;
-  source: "weatherapi" | "noaa";
+  source: "weatherapi" | "noaa" | "unavailable";
 }
-
-/* ... rest of the file stays exactly the same ... */
 
 /* ------------------------------------------------------------------ */
 /*  In-memory cache                                                    */
@@ -81,8 +77,20 @@ function formatDiff(diffMin: number): string {
   return diffMin > 0 ? `${parts} ahead` : `${parts} behind`;
 }
 
+/* Sentinel returned when both weather sources fail */
+const UNAVAILABLE: WeatherData = {
+  temp: 0,
+  condition: "",
+  icon: "",
+  iconKind: "none",
+  high: 0,
+  low: 0,
+  wind: 0,
+  source: "unavailable",
+};
+
 /* ------------------------------------------------------------------ */
-/*  Weather fallback: WeatherAPI → NOAA GFS → placeholder              */
+/*  Weather fallback: WeatherAPI → NOAA GFS → unavailable              */
 /* ------------------------------------------------------------------ */
 const WEATHERAPI_KEY = process.env.NEXT_PUBLIC_WEATHERAPI_KEY;
 
@@ -132,14 +140,16 @@ async function fetchWeather(lat: number, lng: number): Promise<WeatherData> {
       true
     );
     const kelvin = res?.[0]?.value;
-    if (kelvin && Number.isFinite(kelvin)) {
+    // Validate Kelvin range — rejects garbage/null data from NOAA
+    if (kelvin && Number.isFinite(kelvin) && kelvin > 100 && kelvin < 400) {
+      const tempC = Math.round(kelvin - 273.15);
       const w: WeatherData = {
-        temp: Math.round(kelvin - 273.15),
-        condition: "N/A",
-        icon: "❓",
-        iconKind: "emoji",
-        high: Math.round(kelvin - 273.15) + 2,
-        low: Math.round(kelvin - 273.15) - 2,
+        temp: tempC,
+        condition: "Estimated",
+        icon: "",
+        iconKind: "none",
+        high: tempC + 2,
+        low: tempC - 2,
         wind: 0,
         source: "noaa",
       };
@@ -150,17 +160,8 @@ async function fetchWeather(lat: number, lng: number): Promise<WeatherData> {
     /* fall through */
   }
 
-  // 3. Placeholder
-  return {
-    temp: 0,
-    condition: "Unavailable",
-    icon: "❓",
-    iconKind: "emoji",
-    high: 0,
-    low: 0,
-    wind: 0,
-    source: "noaa",
-  };
+  // 3. Both sources failed — return sentinel
+  return UNAVAILABLE;
 }
 
 /* ------------------------------------------------------------------ */
@@ -179,6 +180,7 @@ export function CountryTravelCard({
 }) {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const loading = weather === null;
+  const unavailable = weather?.source === "unavailable";
 
   useEffect(() => {
     let cancelled = false;
@@ -218,8 +220,7 @@ export function CountryTravelCard({
   const dstChange =
     getOffsetMinutes(now, country.tz) !== getOffsetMinutes(seven, country.tz);
   const dstLabel = dstChange
-    ? getOffsetMinutes(seven, country.tz) >
-      getOffsetMinutes(now, country.tz)
+    ? getOffsetMinutes(seven, country.tz) > getOffsetMinutes(now, country.tz)
       ? "DST starts this week"
       : "DST ends this week"
     : "";
@@ -356,75 +357,82 @@ export function CountryTravelCard({
         )}
       </div>
 
-      {/* Weather */}
-      <div
-        className="mt-3 rounded-lg border p-2.5"
-        style={{
-          borderColor: "var(--border-soft)",
-          backgroundColor: "var(--surface-card-soft)",
-        }}
-      >
-        {loading ? (
-          <div
-            className="flex items-center justify-center gap-1.5 py-1 text-[11px]"
-            style={{ color: "var(--text-muted)" }}
-          >
-            <Cloud size={12} />
-            <span>Loading weather…</span>
-          </div>
-        ) : weather ? (
-          <>
-            <div className="flex items-center justify-between">
-              <span
-                className="inline-flex items-center gap-1.5 text-[15px] font-bold"
-                style={{ color: "var(--text-primary)" }}
-              >
-                {weather.iconKind === "url" ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={weather.icon}
-                    alt={weather.condition}
-                    width={28}
-                    height={28}
-                    className="shrink-0 select-none"
-                    loading="lazy"
-                  />
-                ) : (
-                  <span className="text-[20px] leading-none">
-                    {weather.icon}
-                  </span>
-                )}
-                {weather.temp}°C
-              </span>
-              <span
-                className="text-[11px]"
-                style={{ color: "var(--text-muted)" }}
-              >
-                {weather.condition}
-              </span>
-            </div>
+      {/* Weather — hidden entirely when both sources fail */}
+      {!unavailable && (
+        <div
+          className="mt-3 rounded-lg border p-2.5"
+          style={{
+            borderColor: "var(--border-soft)",
+            backgroundColor: "var(--surface-card-soft)",
+          }}
+        >
+          {loading ? (
             <div
-              className="mt-1.5 flex items-center justify-between text-[11px]"
-              style={{ color: "var(--text-secondary)" }}
+              className="flex items-center justify-center gap-1.5 py-1 text-[11px]"
+              style={{ color: "var(--text-muted)" }}
             >
-              <span>
-                H: {weather.high}° · L: {weather.low}°
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <Wind size={11} /> {weather.wind} km/h
-              </span>
+              <Cloud size={12} />
+              <span>Loading weather…</span>
             </div>
-            {weather.source === "noaa" && (
-              <p
-                className="mt-1 text-[10px]"
-                style={{ color: "var(--text-muted)" }}
+          ) : weather ? (
+            <>
+              <div className="flex items-center justify-between">
+                <span
+                  className="inline-flex items-center gap-1.5 text-[15px] font-bold"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  {weather.iconKind === "url" && weather.icon ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={weather.icon}
+                      alt={weather.condition}
+                      width={28}
+                      height={28}
+                      className="shrink-0 select-none"
+                      loading="lazy"
+                    />
+                  ) : weather.iconKind === "emoji" && weather.icon ? (
+                    <span className="text-[20px] leading-none">
+                      {weather.icon}
+                    </span>
+                  ) : (
+                    <Cloud
+                      size={20}
+                      style={{ color: "var(--text-muted)" }}
+                    />
+                  )}
+                  {weather.temp}°C
+                </span>
+                <span
+                  className="text-[11px]"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  {weather.condition || "—"}
+                </span>
+              </div>
+              <div
+                className="mt-1.5 flex items-center justify-between text-[11px]"
+                style={{ color: "var(--text-secondary)" }}
               >
-                Source: NOAA GFS (limited data)
-              </p>
-            )}
-          </>
-        ) : null}
-      </div>
+                <span>
+                  H: {weather.high}° · L: {weather.low}°
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <Wind size={11} /> {weather.wind} km/h
+                </span>
+              </div>
+              {weather.source === "noaa" && (
+                <p
+                  className="mt-1 text-[10px]"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  Estimated from NOAA GFS
+                </p>
+              )}
+            </>
+          ) : null}
+        </div>
+      )}
 
       {/* Sun times */}
       <div
